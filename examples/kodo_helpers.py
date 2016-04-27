@@ -22,7 +22,6 @@ import numpy
 
 
 class CanvasScreenEngine(object):
-
     """Canvas engine for displaying images to the screen."""
 
     def __init__(self, width, height):
@@ -69,7 +68,6 @@ class CanvasScreenEngine(object):
 
 
 class CanvasFileEngine(object):
-
     """
     Canvas engine for writing images to files.
 
@@ -138,7 +136,6 @@ class CanvasFileEngine(object):
 
 
 class StateViewer(object):
-
     """Class for displaying the coding coefficients."""
 
     def __init__(self, size, canvas, canvas_position):
@@ -174,7 +171,6 @@ class StateViewer(object):
 
 
 class DecodeStateViewer(StateViewer):
-
     """Class for displaying the decoding coefficients."""
 
     def __init__(self, size, canvas, canvas_position=(0, 0)):
@@ -201,7 +197,6 @@ class DecodeStateViewer(StateViewer):
 
 
 class EncodeStateViewer(StateViewer):
-
     """Class for displaying the encoding coefficients."""
 
     def __init__(self, size, canvas, canvas_position=(0, 0),
@@ -244,13 +239,12 @@ class EncodeStateViewer(StateViewer):
 
         if self.wrap_around:
             self.index = self.index % self.symbols
-            self.state[self.index-1] = symbol
+            self.state[self.index - 1] = symbol
 
         self.show_decode_state(self.state)
 
 
 class ImageViewer(object):
-
     """A class containing the logic for displaying an image during decoding."""
 
     def __init__(self, width, height, canvas, canvas_position=(0, 0)):
