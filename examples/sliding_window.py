@@ -51,7 +51,7 @@ def main():
     # Let's split the data into symbols and feed the encoder one symbol at a
     # time
     symbol_storage = [
-        data_in[i:i+symbol_size] for i in range(0, len(data_in), symbol_size)
+        data_in[i:i + symbol_size] for i in range(0, len(data_in), symbol_size)
     ]
 
     while not decoder.is_complete():

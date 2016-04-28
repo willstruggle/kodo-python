@@ -64,6 +64,7 @@ def main():
 
         def encoder_callback(zone, msg):
             encoder_viewer.trace_callback(zone, msg)
+        encoder_viewer.set_symbols(encoder.symbols())
         encoder.set_trace_callback(encoder_callback)
 
         # Assign the data buffer to the encoder so that we may start

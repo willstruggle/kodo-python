@@ -29,11 +29,12 @@ def main():
 
     # The expansion factor denotes the number of additional symbols created by
     # the outer code.
-    print("The default values for the fulcrum factories are the following:\n"
-          "\tSymbols: {}\n"
-          "\tMax expansion: {}\n"
-          "\tExpansion: {}\n"
-          "\tMax inner symbols: {}".format(
+    print(
+        "The default values for the fulcrum factories are the following:\n"
+        "\tSymbols: {}\n"
+        "\tMax expansion: {}\n"
+        "\tExpansion: {}\n"
+        "\tMax inner symbols: {}".format(
             encoder_factory.max_symbols(),
             encoder_factory.max_expansion(),
             encoder_factory.expansion(),
@@ -50,15 +51,16 @@ def main():
     encoder = encoder_factory.build()
     decoder = decoder_factory.build()
 
-    print("The created coders now have the following settings.\n"
-          "Encoder:\n"
-          "\tSymbols: {}\n"
-          "\tExpansion: {}\n"
-          "\tInner symbols: {}\n"
-          "Decoder:\n"
-          "\tSymbols: {}\n"
-          "\tExpansion: {}\n"
-          "\tInner symbols: {}".format(
+    print(
+        "The created coders now have the following settings.\n"
+        "Encoder:\n"
+        "\tSymbols: {}\n"
+        "\tExpansion: {}\n"
+        "\tInner symbols: {}\n"
+        "Decoder:\n"
+        "\tSymbols: {}\n"
+        "\tExpansion: {}\n"
+        "\tInner symbols: {}".format(
             encoder.symbols(),
             encoder.expansion(),
             encoder.inner_symbols(),

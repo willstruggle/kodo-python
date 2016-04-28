@@ -94,7 +94,7 @@ def main():
     # Connect the tracing callback to the decode state viewer
     def encoding_callback(zone, msg):
         encoding_state_viewer.trace_callback(zone, msg)
-
+    encoding_state_viewer.set_symbols(encoder.symbols())
     encoder.set_trace_callback(encoding_callback)
 
     def decoding_callback(zone, msg):

@@ -18,10 +18,7 @@ import kodo
 
 
 def main():
-    """
-    UDP Server/Client for sending and receiving files.
-    """
-
+    """UDP Server/Client for sending and receiving files."""
     parser = argparse.ArgumentParser(description=main.__doc__)
 
     parser.add_argument(
@@ -118,6 +115,7 @@ def main():
 
 
 def server(args):
+    """Init server."""
     settings_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     settings_socket.bind(('', args.settings_port))
 
@@ -144,7 +142,7 @@ def server(args):
 
 
 def client(args):
-
+    """Init client."""
     if args.symbol_size > 65000:
         print("Resulting packets too big, reduce symbol size")
         return
@@ -163,10 +161,7 @@ def client(args):
 
 
 def send_data(settings, role):
-    """
-    Send data to the other node
-    """
-
+    """Send data to the other node."""
     # Setup kodo encoder_factory and encoder
     encoder_factory = kodo.FullVectorEncoderFactoryBinary(
         max_symbols=settings['symbols'],
@@ -222,8 +217,7 @@ def send_data(settings, role):
 
 
 def receive_data(settings, role):
-    """Receive data from the other node"""
-
+    """Receive data from the other node."""
     # Setup kodo encoder_factory and decoder
     decoder_factory = kodo.FullVectorDecoderFactoryBinary(
         max_symbols=settings['symbols'],
@@ -275,7 +269,7 @@ def receive_data(settings, role):
         print("Decoding failed")
 
     size = decoder.block_size() * (float(received) / settings['symbols'])
-    seconds = end-start
+    seconds = end - start
     print("Received {0} packets, {1}kB, in {2}s, at {3:.2f} kb/s.".format(
         received,
         size / 1000,
@@ -286,10 +280,11 @@ def receive_data(settings, role):
 
 def send_settings(settings):
     """
-    Send settings to server, block until confirmation received that settings
-    was correctly received
-    """
+    Send settings to server.
 
+    This function blocks until confirmation received that settings
+    was correctly received.
+    """
     control_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     control_socket.settimeout(settings['timeout'])
     control_socket.bind(('', settings['client_control_port']))
