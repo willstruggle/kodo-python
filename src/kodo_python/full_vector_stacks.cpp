@@ -21,21 +21,21 @@ namespace kodo_python
             using boost::python::arg;
             encoder_class
             .def("set_density",
-                &EncoderClass::wrapped_type::set_density, arg("density"),
-                "Set the density of the coefficients generated.\n\n"
-                "\t:param density: The coefficients density.\n"
-            )
+                 &EncoderClass::wrapped_type::set_density, arg("density"),
+                 "Set the density of the coefficients generated.\n\n"
+                 "\t:param density: The coefficients density.\n"
+                )
             .def("density",
-                &EncoderClass::wrapped_type::density,
-                "Get the density of the coefficients generated.\n\n"
-                "\t:returns: The density of the generator.\n"
-            )
+                 &EncoderClass::wrapped_type::density,
+                 "Get the density of the coefficients generated.\n\n"
+                 "\t:returns: The density of the generator.\n"
+                )
             .def("set_average_nonzero_symbols",
-                &EncoderClass::wrapped_type::set_average_nonzero_symbols,
-                arg("symbols"),
-                "Set the average number of nonzero symbols.\n\n"
-                "\t:param symbols: The average number of nonzero symbols.\n"
-            );
+                 &EncoderClass::wrapped_type::set_average_nonzero_symbols,
+                 arg("symbols"),
+                 "Set the average number of nonzero symbols.\n\n"
+                 "\t:param symbols: The average number of nonzero symbols.\n"
+                );
         }
     };
 

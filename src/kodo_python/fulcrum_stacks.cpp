@@ -18,22 +18,22 @@ namespace kodo_python
         {
             coder_class
             .def("max_expansion",
-                &CoderClass::wrapped_type::max_expansion,
-                "Get the maximum expansion supported.\n\n"
-                "\t:returns: The maximum expansion supported.\n"
-            )
+                 &CoderClass::wrapped_type::max_expansion,
+                 "Get the maximum expansion supported.\n\n"
+                 "\t:returns: The maximum expansion supported.\n"
+                )
             .def("expansion",
-                &CoderClass::wrapped_type::expansion,
-                "Get the expansion factor used. The expansion factor denotes "
-                "the number of additional symbols created by the outer "
-                "code.\n\n"
-                "\t:returns: The expansion factor used.\n"
-            )
+                 &CoderClass::wrapped_type::expansion,
+                 "Get the expansion factor used. The expansion factor denotes "
+                 "the number of additional symbols created by the outer "
+                 "code.\n\n"
+                 "\t:returns: The expansion factor used.\n"
+                )
             .def("inner_symbols",
-                &CoderClass::wrapped_type::inner_symbols,
-                "Get the number of symbols in the inner code.\n\n"
-                "\t:returns: The number of symbols in the inner code.\n"
-            );
+                 &CoderClass::wrapped_type::inner_symbols,
+                 "Get the number of symbols in the inner code.\n\n"
+                 "\t:returns: The number of symbols in the inner code.\n"
+                );
         }
     };
 
@@ -45,28 +45,28 @@ namespace kodo_python
             using boost::python::arg;
             factory_class
             .def("max_expansion",
-                &FactoryClass::wrapped_type::max_expansion,
-                "Get the maximum expansion supported.\n\n"
-                "\t:returns: The maximum expansion supported.\n"
-            )
+                 &FactoryClass::wrapped_type::max_expansion,
+                 "Get the maximum expansion supported.\n\n"
+                 "\t:returns: The maximum expansion supported.\n"
+                )
             .def("expansion",
-                &FactoryClass::wrapped_type::expansion,
-                "Get the expansion factor used. The expansion factor denotes "
-                "the number of additional symbols created by the outer "
-                "code.\n\n"
-                "\t:returns: The expansion factor used.\n"
-            )
+                 &FactoryClass::wrapped_type::expansion,
+                 "Get the expansion factor used. The expansion factor denotes "
+                 "the number of additional symbols created by the outer "
+                 "code.\n\n"
+                 "\t:returns: The expansion factor used.\n"
+                )
             .def("set_expansion",
-                &FactoryClass::wrapped_type::set_expansion,
-                arg("expansion"),
-                "Sets the number of expansion symbols.\n\n"
-                "\t:param expansion: The number of expansion symbols to use.\n"
-            )
+                 &FactoryClass::wrapped_type::set_expansion,
+                 arg("expansion"),
+                 "Sets the number of expansion symbols.\n\n"
+                 "\t:param expansion: The number of expansion symbols to use.\n"
+                )
             .def("max_inner_symbols",
-                &FactoryClass::wrapped_type::max_inner_symbols,
-                "Get the maximum number of symbols in the inner code.\n\n"
-                "\t:returns: The maximum number of symbols in the inner code.\n"
-            );
+                 &FactoryClass::wrapped_type::max_inner_symbols,
+                 "Get the maximum number of symbols in the inner code.\n\n"
+                 "\t:returns: The maximum number of symbols in the inner code.\n"
+                );
         }
     };
 

@@ -29,15 +29,15 @@ namespace kodo_python
     {
         std::vector<uint8_t> payload(decoder.block_size());
         auto storage = sak::mutable_storage(
-            payload.data(), decoder.block_size());
+                           payload.data(), decoder.block_size());
         decoder.copy_from_symbols(storage);
-        #if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
         return PyBytes_FromStringAndSize(
-            (char*)payload.data(), decoder.block_size());
-        #else
+                   (char*)payload.data(), decoder.block_size());
+#else
         return PyString_FromStringAndSize(
-            (char*)payload.data(), decoder.block_size());
-        #endif
+                   (char*)payload.data(), decoder.block_size());
+#endif
     }
 
     template<class Decoder>
@@ -45,15 +45,15 @@ namespace kodo_python
     {
         std::vector<uint8_t> payload(decoder.symbol_size());
         auto storage = sak::mutable_storage(
-            payload.data(), decoder.symbol_size());
+                           payload.data(), decoder.symbol_size());
         decoder.copy_from_symbol(index, storage);
-        #if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
         return PyBytes_FromStringAndSize(
-            (char*)payload.data(), decoder.symbol_size());
-        #else
+                   (char*)payload.data(), decoder.symbol_size());
+#else
         return PyString_FromStringAndSize(
-            (char*)payload.data(), decoder.symbol_size());
-        #endif
+                   (char*)payload.data(), decoder.symbol_size());
+#endif
     }
 
     template<class Decoder>
@@ -62,11 +62,11 @@ namespace kodo_python
         std::vector<uint8_t> payload(decoder.payload_size());
         auto length = decoder.write_payload(payload.data());
 
-        #if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
         return PyBytes_FromStringAndSize((char*)payload.data(), length);
-        #else
+#else
         return PyString_FromStringAndSize((char*)payload.data(), length);
-        #endif
+#endif
     }
 
     template<class Decoder>
@@ -95,10 +95,10 @@ namespace kodo_python
         {
             decoder_class
             .def("is_partially_complete",
-                &DecoderClass::wrapped_type::is_partially_complete,
-                "Check whether the decoding matrix is partially decoded.\n\n"
-                "\t:returns: True if the decoding matrix is partially "
-                "decoded.\n");
+                 &DecoderClass::wrapped_type::is_partially_complete,
+                 "Check whether the decoding matrix is partially decoded.\n\n"
+                 "\t:returns: True if the decoding matrix is partially "
+                 "decoded.\n");
         }
     };
 
@@ -120,10 +120,10 @@ namespace kodo_python
         {
             decoder_class
             .def("write_payload",
-                &decoder_write_payload<typename DecoderClass::wrapped_type>,
-                "Recode symbol.\n\n"
-                "\t:returns: The recoded symbol.\n"
-            );
+                 &decoder_write_payload<typename DecoderClass::wrapped_type>,
+                 "Recode symbol.\n\n"
+                 "\t:returns: The recoded symbol.\n"
+                );
         }
     };
 
@@ -150,78 +150,79 @@ namespace kodo_python
         std::string kind = "Decoder";
         std::string name = stack + kind + field;
 
-        auto decoder_class = coder<Coder, Field, TraceTag>(name)
-        .def("read_payload", &read_payload<decoder_type>, arg("symbol_data"),
-            "Decode the provided encoded symbol.\n\n"
-            "\t:param symbol_data: The encoded symbol.\n"
-        )
-        .def("is_complete", &decoder_type::is_complete,
-            "Check whether decoding is complete.\n\n"
-            "\t:returns: True if the decoding is complete.\n"
-        )
-        .def("symbols_uncoded", &decoder_type::symbols_uncoded,
-            "Returns the number of uncoded symbols currently known.\n\n"
-            "Depending on the algorithm used the true number of uncoded\n"
-            "symbols may be higher.\n"
-            "The reason for this uncertainty is the some algorithms, for\n"
-            "performance reasons, choose to not keep track of the exact\n"
-            "status of the decoding matrix.\n"
-            "It is however guaranteed that at least this amount of uncoded\n"
-            "symbols exist.\n\n"
-            "\t:returns: The number of symbols which have been uncoded.\n"
-        )
-        .def("symbols_missing", &decoder_type::symbols_missing,
-            "Return the number of missing symbols at the decoder.\n\n"
-            "\t:returns: The number of missing symbols.\n"
-        )
-        .def("symbols_partially_decoded",
-            &decoder_type::symbols_partially_decoded,
-            "Return the number of partially decoded symbols at the decoder.\n\n"
-            "\t:returns: The number of partially decoded symbols.\n"
-        )
-        .def("is_symbol_uncoded", &decoder_type::is_symbol_uncoded,
-            arg("index"),
-            "Check if the symbol at given index is uncoded.\n\n"
-            "This may return false for symbols that are actually uncoded,\n"
-            "but never true for symbols that are not uncoded.\n"
-            "As with the symbols_uncoded() function the reason for this is\n"
-            "that some algorithms do not, for performance reasons, keep track\n"
-            "of the exact status of the decoding matrix.\n\n"
-            "\t:param index: Index of the symbol to check.\n"
-            "\t:return: True if the symbol is uncoded, and otherwise false.\n"
-        )
-        .def("is_symbol_missing", &decoder_type::is_symbol_missing,
-            arg("index"),
-            "Check if the symbol at given index is missing.\n\n"
-            "\t:param index: Index of the symbol to check.\n"
-            "\t:return: True if the symbol is missing otherwise false.\n"
-        )
-        .def("is_symbol_partially_decoded",
-            &decoder_type::is_symbol_partially_decoded,
-            arg("index"),
-            "Check if the symbol at given index is partially decoded.\n\n"
-            "\t:param index: Index of the symbol to check.\n"
-            "\t:return: True if the symbol is partially decoded otherwise\n"
-            "\t         false.\n"
-        )
-        .def("copy_from_symbol", &copy_from_symbol<decoder_type>,
-            arg("index"),
-            "Return the decoded symbol.\n\n"
-            "\t:param index: Index of the symbol to return.\n"
-            "\t:returns: The decoded symbol.\n"
-        )
-        .def("copy_from_symbols", &copy_from_symbols<decoder_type>,
-            "Return the decoded symbols.\n\n"
-            "\t:returns: The decoded symbols.\n"
-        );
+        auto decoder_class =
+            coder<Coder, Field, TraceTag>(name)
+            .def("read_payload", &read_payload<decoder_type>, arg("symbol_data"),
+                 "Decode the provided encoded symbol.\n\n"
+                 "\t:param symbol_data: The encoded symbol.\n"
+                )
+            .def("is_complete", &decoder_type::is_complete,
+                 "Check whether decoding is complete.\n\n"
+                 "\t:returns: True if the decoding is complete.\n"
+                )
+            .def("symbols_uncoded", &decoder_type::symbols_uncoded,
+                 "Returns the number of uncoded symbols currently known.\n\n"
+                 "Depending on the algorithm used the true number of uncoded\n"
+                 "symbols may be higher.\n"
+                 "The reason for this uncertainty is the some algorithms, for\n"
+                 "performance reasons, choose to not keep track of the exact\n"
+                 "status of the decoding matrix.\n"
+                 "It is however guaranteed that at least this amount of uncoded\n"
+                 "symbols exist.\n\n"
+                 "\t:returns: The number of symbols which have been uncoded.\n"
+                )
+            .def("symbols_missing", &decoder_type::symbols_missing,
+                 "Return the number of missing symbols at the decoder.\n\n"
+                 "\t:returns: The number of missing symbols.\n"
+                )
+            .def("symbols_partially_decoded",
+                 &decoder_type::symbols_partially_decoded,
+                 "Return the number of partially decoded symbols at the decoder.\n\n"
+                 "\t:returns: The number of partially decoded symbols.\n"
+                )
+            .def("is_symbol_uncoded", &decoder_type::is_symbol_uncoded,
+                 arg("index"),
+                 "Check if the symbol at given index is uncoded.\n\n"
+                 "This may return false for symbols that are actually uncoded,\n"
+                 "but never true for symbols that are not uncoded.\n"
+                 "As with the symbols_uncoded() function the reason for this is\n"
+                 "that some algorithms do not, for performance reasons, keep track\n"
+                 "of the exact status of the decoding matrix.\n\n"
+                 "\t:param index: Index of the symbol to check.\n"
+                 "\t:return: True if the symbol is uncoded, and otherwise false.\n"
+                )
+            .def("is_symbol_missing", &decoder_type::is_symbol_missing,
+                 arg("index"),
+                 "Check if the symbol at given index is missing.\n\n"
+                 "\t:param index: Index of the symbol to check.\n"
+                 "\t:return: True if the symbol is missing otherwise false.\n"
+                )
+            .def("is_symbol_partially_decoded",
+                 &decoder_type::is_symbol_partially_decoded,
+                 arg("index"),
+                 "Check if the symbol at given index is partially decoded.\n\n"
+                 "\t:param index: Index of the symbol to check.\n"
+                 "\t:return: True if the symbol is partially decoded otherwise\n"
+                 "\t         false.\n"
+                )
+            .def("copy_from_symbol", &copy_from_symbol<decoder_type>,
+                 arg("index"),
+                 "Return the decoded symbol.\n\n"
+                 "\t:param index: Index of the symbol to return.\n"
+                 "\t:returns: The decoded symbol.\n"
+                )
+            .def("copy_from_symbols", &copy_from_symbols<decoder_type>,
+                 "Return the decoded symbols.\n\n"
+                 "\t:returns: The decoded symbols.\n"
+                );
 
 
         (write_payload_method<
-            kodo_core::has_write_payload<decoder_type>::value>(decoder_class));
+         kodo_core::has_write_payload<decoder_type>::value>(decoder_class));
 
         (is_partially_complete_method<
-            kodo_core::has_partial_decoding_tracker<decoder_type>::value>(
-                decoder_class));
+         kodo_core::has_partial_decoding_tracker<decoder_type>::value>(
+             decoder_class));
 
         (extra_decoder_methods<Coder>(decoder_class));
     }

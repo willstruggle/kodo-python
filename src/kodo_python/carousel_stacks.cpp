@@ -21,8 +21,8 @@ namespace kodo_python
     {
     public:
         using factory = kodo_core::rebind_factory<
-            kodo_core::nocode::carousel_encoder<TraceTag>,
-            carousel_encoder_wrapper<Field, TraceTag>>;
+                        kodo_core::nocode::carousel_encoder<TraceTag>,
+                        carousel_encoder_wrapper<Field, TraceTag>>;
     };
 
     template<class Field, class TraceTag>
@@ -31,8 +31,8 @@ namespace kodo_python
     {
     public:
         using factory = kodo_core::rebind_factory<
-            kodo_core::nocode::carousel_encoder<TraceTag>,
-            carousel_decoder_wrapper<Field, TraceTag>>;
+                        kodo_core::nocode::carousel_encoder<TraceTag>,
+                        carousel_decoder_wrapper<Field, TraceTag>>;
 
     public:
         uint32_t symbols_uncoded()

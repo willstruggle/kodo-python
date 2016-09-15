@@ -20,8 +20,8 @@ namespace kodo_python
         {
             coder_class
             .def("feedback_size", &CoderClass::wrapped_type::feedback_size,
-                "Return the required feedback buffer size in bytes.\n\n"
-                "\t:returns: The required feedback buffer size in bytes.\n");
+                 "Return the required feedback buffer size in bytes.\n\n"
+                 "\t:returns: The required feedback buffer size in bytes.\n");
         }
     };
 
@@ -45,8 +45,8 @@ namespace kodo_python
             (sliding_window_coder_methods(encoder_class));
             encoder_class
             .def("read_feedback", &read_feedback<typename EncoderClass::wrapped_type>,
-                "Return the feedback information.\n\n"
-                "\t:returns: The feedback information.\n");
+                 "Return the feedback information.\n\n"
+                 "\t:returns: The feedback information.\n");
         }
     };
 
@@ -55,11 +55,11 @@ namespace kodo_python
     {
         std::vector<uint8_t> payload(decoder.feedback_size());
         uint32_t length = decoder.write_feedback(payload.data());
-        #if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
         return PyBytes_FromStringAndSize((char*)payload.data(), length);
-        #else
+#else
         return PyString_FromStringAndSize((char*)payload.data(), length);
-        #endif
+#endif
     }
 
     template<>
@@ -71,9 +71,9 @@ namespace kodo_python
             (sliding_window_coder_methods(decoder_class));
             decoder_class
             .def("write_feedback",
-                &write_feedback<typename DecoderClass::wrapped_type>,
-                "Return a buffer containing the feedback.\n\n"
-                "\t:returns: A buffer containing the feedback.\n");
+                 &write_feedback<typename DecoderClass::wrapped_type>,
+                 "Return a buffer containing the feedback.\n\n"
+                 "\t:returns: A buffer containing the feedback.\n");
         }
     };
 
