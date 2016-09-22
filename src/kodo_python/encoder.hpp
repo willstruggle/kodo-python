@@ -24,7 +24,7 @@ namespace kodo_python
     void set_const_symbols(Encoder& encoder, const std::string& data)
     {
         auto storage = sak::const_storage(
-                           (uint8_t*)data.c_str(), (uint32_t)data.length());
+            (uint8_t*)data.c_str(), (uint32_t)data.length());
         encoder.set_const_symbols(storage);
     }
 
@@ -32,7 +32,7 @@ namespace kodo_python
     void set_const_symbol(Encoder& encoder, uint32_t index, const std::string& data)
     {
         auto storage = sak::const_storage(
-                           (uint8_t*)data.c_str(), (uint32_t)data.length());
+            (uint8_t*)data.c_str(), (uint32_t)data.length());
         encoder.set_const_symbol(index, storage);
     }
 

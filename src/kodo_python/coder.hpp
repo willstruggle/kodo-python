@@ -80,7 +80,7 @@ namespace kodo_python
     void set_trace_callback(Coder& coder, PyObject* function)
     {
         auto callback = [function](
-                            const std::string& zone, const std::string& message)
+            const std::string& zone, const std::string& message)
         {
             boost::python::call<void>(function, zone, message);
         };
@@ -167,30 +167,30 @@ namespace kodo_python
         class Field, class TraceTag
     >
     auto coder(const std::string& name) ->
-    boost::python::class_<Coder<Field, TraceTag>, boost::noncopyable>
+        boost::python::class_<Coder<Field, TraceTag>, boost::noncopyable>
     {
         using namespace boost::python;
 
         typedef Coder<Field, TraceTag> coder_type;
         auto coder_class = class_<coder_type, boost::noncopyable>(
             name.c_str(), "An (en/de)coder", no_init)
-        .def("payload_size", &coder_type::payload_size,
-             "Return the required payload buffer size in bytes.\n\n"
-             "\t:returns: The required payload buffer size in bytes.\n"
-            )
-        .def("block_size", &coder_type::block_size,
-             "Return the block size.\n\n"
-             "\t:returns: The block size i.e. the total size in bytes that this "
-             "coder operates on.\n"
-            )
-        .def("symbol_size", &coder_type::symbol_size,
-             "Return the symbol size of a symbol in bytes.\n\n"
-             "\t:returns: The symbol size of a symbol in bytes.\n"
-            )
-        .def("symbols", &coder_type::symbols,
-             "Return the number of symbols in this block coder.\n\n"
-             "\t:returns: The number of symbols in this block coder.\n"
-            );
+            .def("payload_size", &coder_type::payload_size,
+                 "Return the required payload buffer size in bytes.\n\n"
+                 "\t:returns: The required payload buffer size in bytes.\n"
+                )
+            .def("block_size", &coder_type::block_size,
+                 "Return the block size.\n\n"
+                 "\t:returns: The block size i.e. the total size in bytes that "
+                 "this coder operates on.\n"
+                )
+            .def("symbol_size", &coder_type::symbol_size,
+                 "Return the symbol size of a symbol in bytes.\n\n"
+                 "\t:returns: The symbol size of a symbol in bytes.\n"
+                )
+            .def("symbols", &coder_type::symbols,
+                 "Return the number of symbols in this block coder.\n\n"
+                 "\t:returns: The number of symbols in this block coder.\n"
+                );
 
         (is_symbol_pivot_method<
          kodo_core::has_is_symbol_pivot<coder_type>::value>(coder_class));

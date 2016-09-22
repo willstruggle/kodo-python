@@ -29,14 +29,14 @@ namespace kodo_python
     {
         std::vector<uint8_t> payload(decoder.block_size());
         auto storage = sak::mutable_storage(
-                           payload.data(), decoder.block_size());
+            payload.data(), decoder.block_size());
         decoder.copy_from_symbols(storage);
 #if PY_MAJOR_VERSION >= 3
         return PyBytes_FromStringAndSize(
-                   (char*)payload.data(), decoder.block_size());
+            (char*)payload.data(), decoder.block_size());
 #else
         return PyString_FromStringAndSize(
-                   (char*)payload.data(), decoder.block_size());
+            (char*)payload.data(), decoder.block_size());
 #endif
     }
 
@@ -45,14 +45,14 @@ namespace kodo_python
     {
         std::vector<uint8_t> payload(decoder.symbol_size());
         auto storage = sak::mutable_storage(
-                           payload.data(), decoder.symbol_size());
+            payload.data(), decoder.symbol_size());
         decoder.copy_from_symbol(index, storage);
 #if PY_MAJOR_VERSION >= 3
         return PyBytes_FromStringAndSize(
-                   (char*)payload.data(), decoder.symbol_size());
+            (char*)payload.data(), decoder.symbol_size());
 #else
         return PyString_FromStringAndSize(
-                   (char*)payload.data(), decoder.symbol_size());
+            (char*)payload.data(), decoder.symbol_size());
 #endif
     }
 
