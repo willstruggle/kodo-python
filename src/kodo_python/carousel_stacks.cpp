@@ -15,39 +15,39 @@
 
 namespace kodo_python
 {
-    template<class Field, class TraceTag>
-    class carousel_encoder_wrapper : public
-        kodo_core::nocode::carousel_encoder<TraceTag>
-    {
-    public:
-        using factory = kodo_core::rebind_factory<
-                        kodo_core::nocode::carousel_encoder<TraceTag>,
-                        carousel_encoder_wrapper<Field, TraceTag>>;
-    };
+template<class Field, class TraceTag>
+class carousel_encoder_wrapper : public
+    kodo_core::nocode::carousel_encoder<TraceTag>
+{
+public:
+    using factory = kodo_core::rebind_factory<
+                    kodo_core::nocode::carousel_encoder<TraceTag>,
+                    carousel_encoder_wrapper<Field, TraceTag>>;
+};
 
-    template<class Field, class TraceTag>
-    class carousel_decoder_wrapper : public
-        kodo_core::nocode::carousel_decoder<TraceTag>
-    {
-    public:
-        using factory = kodo_core::rebind_factory<
-                        kodo_core::nocode::carousel_encoder<TraceTag>,
-                        carousel_decoder_wrapper<Field, TraceTag>>;
+template<class Field, class TraceTag>
+class carousel_decoder_wrapper : public
+    kodo_core::nocode::carousel_decoder<TraceTag>
+{
+public:
+    using factory = kodo_core::rebind_factory<
+                    kodo_core::nocode::carousel_encoder<TraceTag>,
+                    carousel_decoder_wrapper<Field, TraceTag>>;
 
-    public:
-        uint32_t symbols_uncoded()
-        {
-            return kodo_core::nocode::carousel_decoder<TraceTag>::rank();
-        }
-    };
-
-    void create_carousel_stacks()
+public:
+    uint32_t symbols_uncoded()
     {
-        create_factory_and_encoder<carousel_encoder_wrapper,
-            no_field>("NoCode");
-        create_factory_and_decoder<carousel_decoder_wrapper,
-            no_field>("NoCode");
+        return kodo_core::nocode::carousel_decoder<TraceTag>::rank();
     }
+};
+
+void create_carousel_stacks()
+{
+    create_factory_and_encoder<carousel_encoder_wrapper,
+        no_field>("NoCode");
+    create_factory_and_decoder<carousel_decoder_wrapper,
+        no_field>("NoCode");
+}
 }
 
 #endif

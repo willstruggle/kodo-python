@@ -12,13 +12,13 @@
 
 namespace kodo_python
 {
-    void create_on_the_fly_stacks()
-    {
-        using namespace kodo_rlnc;
+void create_on_the_fly_stacks()
+{
+    using namespace kodo_rlnc;
 
-        create_encoder<on_the_fly_encoder>("OnTheFly");
-        create_decoder<on_the_fly_decoder>("OnTheFly");
-    }
+    create_encoder<on_the_fly_encoder>("OnTheFly");
+    create_decoder<on_the_fly_decoder>("OnTheFly");
+}
 }
 
 #endif
