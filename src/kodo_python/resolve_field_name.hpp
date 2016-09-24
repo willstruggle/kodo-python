@@ -16,35 +16,35 @@
 
 namespace kodo_python
 {
-    class no_field
-    { };
+class no_field
+{ };
 
-    template<class Field>
-    std::string resolve_field_name()
+template<class Field>
+std::string resolve_field_name()
+{
+    if (std::is_same<Field, no_field>::value)
     {
-        if (std::is_same<Field, no_field>::value)
-        {
-            return "";
-        }
-        else if (std::is_same<Field, fifi::binary>::value)
-        {
-            return "Binary";
-        }
-        else if (std::is_same<Field, fifi::binary4>::value)
-        {
-            return "Binary4";
-        }
-        else if (std::is_same<Field, fifi::binary8>::value)
-        {
-            return "Binary8";
-        }
-        else if (std::is_same<Field, fifi::binary16>::value)
-        {
-            return "Binary16";
-        }
-        else if (std::is_same<Field, fifi::prime2325>::value)
-        {
-            return "Prime2325";
-        }
+        return "";
     }
+    else if (std::is_same<Field, fifi::binary>::value)
+    {
+        return "Binary";
+    }
+    else if (std::is_same<Field, fifi::binary4>::value)
+    {
+        return "Binary4";
+    }
+    else if (std::is_same<Field, fifi::binary8>::value)
+    {
+        return "Binary8";
+    }
+    else if (std::is_same<Field, fifi::binary16>::value)
+    {
+        return "Binary16";
+    }
+    else if (std::is_same<Field, fifi::prime2325>::value)
+    {
+        return "Prime2325";
+    }
+}
 }
