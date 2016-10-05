@@ -17,7 +17,7 @@
 #include <kodo_core/has_partial_decoding_tracker.hpp>
 #include <kodo_core/has_write_payload.hpp>
 
-#include <sak/storage.hpp>
+#include <storage/storage.hpp>
 
 #include "coder.hpp"
 #include "resolve_field_name.hpp"
@@ -28,7 +28,7 @@ template<class Decoder>
 PyObject* copy_from_symbols(Decoder& decoder)
 {
     std::vector<uint8_t> payload(decoder.block_size());
-    auto storage = sak::mutable_storage(
+    auto storage = storage::mutable_storage(
         payload.data(), decoder.block_size());
     decoder.copy_from_symbols(storage);
 #if PY_MAJOR_VERSION >= 3
@@ -44,7 +44,7 @@ template<class Decoder>
 PyObject* copy_from_symbol(Decoder& decoder, uint32_t index)
 {
     std::vector<uint8_t> payload(decoder.symbol_size());
-    auto storage = sak::mutable_storage(
+    auto storage = storage::mutable_storage(
         payload.data(), decoder.symbol_size());
     decoder.copy_from_symbol(index, storage);
 #if PY_MAJOR_VERSION >= 3
@@ -97,8 +97,7 @@ struct is_partially_complete_method<true>
         .def("is_partially_complete",
              &DecoderClass::wrapped_type::is_partially_complete,
              "Check whether the decoding matrix is partially decoded.\n\n"
-             "\t:returns: True if the decoding matrix is partially "
-             "decoded.\n");
+             "\t:returns: True if the decoding matrix is partially decoded.\n");
     }
 };
 
@@ -137,10 +136,7 @@ struct extra_decoder_methods
     }
 };
 
-template<
-    template<class, class> class Coder,
-    class Field, class TraceTag
->
+template<template<class, class> class Coder, class Field, class TraceTag>
 void decoder(const std::string& stack)
 {
     using boost::python::arg;
