@@ -9,10 +9,7 @@
 #include <string>
 #include <vector>
 
-#include <Python.h>
-#include <bytesobject.h>
 #include <boost/python.hpp>
-#include <boost/python/args.hpp>
 
 #include <kodo_core/has_partial_decoding_tracker.hpp>
 #include <kodo_core/has_write_payload.hpp>

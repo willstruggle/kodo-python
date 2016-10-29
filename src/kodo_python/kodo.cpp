@@ -4,7 +4,6 @@
 // http://www.steinwurf.com/licensing
 
 #include <boost/python.hpp>
-#include <boost/python/docstring_options.hpp>
 
 #include <string>
 

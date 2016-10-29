@@ -8,10 +8,7 @@
 #include <string>
 #include <vector>
 
-#include <Python.h>
-#include <bytesobject.h>
 #include <boost/python.hpp>
-#include <boost/python/args.hpp>
 
 #include <kodo_core/has_set_systematic_off.hpp>
 
