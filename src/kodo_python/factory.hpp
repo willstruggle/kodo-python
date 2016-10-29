@@ -8,7 +8,6 @@
 #include <string>
 
 #include <boost/python.hpp>
-#include <boost/python/args.hpp>
 
 #include <kodo_core/has_is_complete.hpp>
 #include "resolve_field_name.hpp"

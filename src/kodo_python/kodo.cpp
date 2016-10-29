@@ -3,10 +3,9 @@
 // See accompanying file LICENSE.rst or
 // http://www.steinwurf.com/licensing
 
-#include <boost/python.hpp>
-#include <boost/python/docstring_options.hpp>
-
 #include <string>
+
+#include <boost/python.hpp>
 
 namespace kodo_python
 {
