@@ -6,7 +6,7 @@ import os
 from waflib.TaskGen import feature, after_method
 
 APPNAME = 'kodo-python'
-VERSION = '10.0.0'
+VERSION = '11.0.0'
 
 codecs = ['nocode', 'full_vector', 'on_the_fly', 'sliding_window',
           'perpetual', 'fulcrum']
@@ -91,7 +91,6 @@ def build(bld):
     bld.env['CXXFLAGS_PYEXT'] = []
 
     CXX = bld.env.get_flat("CXX")
-    # Matches both /usr/bin/g++ and /user/bin/clang++
     if 'g++' in CXX or 'clang' in CXX:
         bld.env.append_value('CXXFLAGS', '-fPIC')
 
