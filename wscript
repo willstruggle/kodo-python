@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import os
-import waflib.extras.wurf_options
+
 from waflib.TaskGen import feature, after_method
 
 APPNAME = 'kodo-python'
@@ -14,44 +14,9 @@ codecs = ['nocode', 'full_vector', 'on_the_fly', 'sliding_window',
 
 def options(opt):
 
-    opt.load('wurf_common_tools')
     opt.load('python')
 
-
-def resolve(ctx):
-
-    import waflib.extras.wurf_dependency_resolve as resolve
-
-    ctx.load('wurf_common_tools')
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='waf-tools',
-        git_repository='github.com/steinwurf/waf-tools.git',
-        major=3))
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='boost',
-        git_repository='github.com/steinwurf/boost.git',
-        major=2))
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='kodo-core',
-        git_repository='github.com/steinwurf/kodo-core.git',
-        major=6))
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='kodo-rlnc',
-        git_repository='github.com/steinwurf/kodo-rlnc.git',
-        major=5),
-        optional=True)
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='kodo-fulcrum',
-        git_repository='github.com/steinwurf/kodo-fulcrum.git',
-        major=5),
-        optional=True)
-
-    opts = ctx.opt.add_option_group('kodo-python options')
+    opts = opt.add_option_group('kodo-python options')
 
     opts.add_option(
         '--disable_rlnc', default=None, dest='disable_rlnc',
@@ -68,8 +33,6 @@ def resolve(ctx):
 
 
 def configure(conf):
-
-    conf.load("wurf_common_tools")
 
     conf.env['DEFINES_KODO_PYTHON_COMMON'] = []
 
@@ -112,8 +75,6 @@ def build(bld):
     # the boost wscript (boost-python needs to be configured in the boost repo)
     if not bld.env['BUILD_PYTHON']:
         bld.fatal('Python was not configured properly')
-
-    bld.load("wurf_common_tools")
 
     bld.env.append_unique(
         'DEFINES_STEINWURF_VERSION',
