@@ -7,6 +7,7 @@ every change, see the Git log.
 Latest
 ------
 * tbd
+* Minor: Updated the license to STEINWURF EVALUATION LICENSE 1.0.
 
 12.0.0
 ------
