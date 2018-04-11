@@ -18,6 +18,10 @@ def main():
     This Example shows how to use the additional settings and parameters
     supported by the fulcrum code.
     """
+    if not hasattr(kodo, 'FulcrumEncoderFactoryBinary8'):
+        print("The fulcrum codec is not available")
+        return
+
     # Set the number of symbols (i.e. the generation size in RLNC terminology)
     # and the size of a symbol in bytes
     symbols = 24
