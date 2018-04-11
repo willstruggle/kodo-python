@@ -11,69 +11,95 @@ import unittest
 
 import kodo
 
-test_sets = [
-    # FullVector
-    (kodo.FullVectorEncoderFactoryBinary,
-     kodo.FullVectorDecoderFactoryBinary),
-    (kodo.FullVectorEncoderFactoryBinary4,
-     kodo.FullVectorDecoderFactoryBinary4),
-    (kodo.FullVectorEncoderFactoryBinary8,
-     kodo.FullVectorDecoderFactoryBinary8),
-    (kodo.FullVectorEncoderFactoryBinary16,
-     kodo.FullVectorDecoderFactoryBinary16),
+# The test sets are only enabled for the codecs that were actually compiled
+# (some repositories might be unavailable for certain users)
+test_sets = []
 
-    # SparseFullVector
-    (kodo.SparseFullVectorEncoderFactoryBinary,
-     kodo.FullVectorDecoderFactoryBinary),
-    (kodo.SparseFullVectorEncoderFactoryBinary4,
-     kodo.FullVectorDecoderFactoryBinary4),
-    (kodo.SparseFullVectorEncoderFactoryBinary8,
-     kodo.FullVectorDecoderFactoryBinary8),
-    (kodo.SparseFullVectorEncoderFactoryBinary16,
-     kodo.FullVectorDecoderFactoryBinary16),
+# FullVector
+if hasattr(kodo, 'FullVectorEncoderFactoryBinary'):
+    test_sets.append((kodo.FullVectorEncoderFactoryBinary,
+                      kodo.FullVectorDecoderFactoryBinary))
+if hasattr(kodo, 'FullVectorEncoderFactoryBinary4'):
+    test_sets.append((kodo.FullVectorEncoderFactoryBinary4,
+                      kodo.FullVectorDecoderFactoryBinary4))
+if hasattr(kodo, 'FullVectorEncoderFactoryBinary8'):
+    test_sets.append((kodo.FullVectorEncoderFactoryBinary8,
+                      kodo.FullVectorDecoderFactoryBinary8))
+if hasattr(kodo, 'FullVectorEncoderFactoryBinary16'):
+    test_sets.append((kodo.FullVectorEncoderFactoryBinary16,
+                      kodo.FullVectorDecoderFactoryBinary16))
 
-    # OnTheFly
-    (kodo.OnTheFlyEncoderFactoryBinary,
-     kodo.OnTheFlyDecoderFactoryBinary),
-    (kodo.OnTheFlyEncoderFactoryBinary4,
-     kodo.OnTheFlyDecoderFactoryBinary4),
-    (kodo.OnTheFlyEncoderFactoryBinary8,
-     kodo.OnTheFlyDecoderFactoryBinary8),
-    (kodo.OnTheFlyEncoderFactoryBinary16,
-     kodo.OnTheFlyDecoderFactoryBinary16),
+# SparseFullVector
+if hasattr(kodo, 'SparseFullVectorEncoderFactoryBinary'):
+    test_sets.append((kodo.SparseFullVectorEncoderFactoryBinary,
+                      kodo.FullVectorDecoderFactoryBinary))
+if hasattr(kodo, 'SparseFullVectorEncoderFactoryBinary4'):
+    test_sets.append((kodo.SparseFullVectorEncoderFactoryBinary4,
+                      kodo.FullVectorDecoderFactoryBinary4))
+if hasattr(kodo, 'SparseFullVectorEncoderFactoryBinary8'):
+    test_sets.append((kodo.SparseFullVectorEncoderFactoryBinary8,
+                      kodo.FullVectorDecoderFactoryBinary8))
+if hasattr(kodo, 'SparseFullVectorEncoderFactoryBinary16'):
+    test_sets.append((kodo.SparseFullVectorEncoderFactoryBinary16,
+                      kodo.FullVectorDecoderFactoryBinary16))
 
-    # SlidingWindow
-    (kodo.SlidingWindowEncoderFactoryBinary,
-     kodo.SlidingWindowDecoderFactoryBinary),
-    (kodo.SlidingWindowEncoderFactoryBinary4,
-     kodo.SlidingWindowDecoderFactoryBinary4),
-    (kodo.SlidingWindowEncoderFactoryBinary8,
-     kodo.SlidingWindowDecoderFactoryBinary8),
-    (kodo.SlidingWindowEncoderFactoryBinary16,
-     kodo.SlidingWindowDecoderFactoryBinary16),
+# OnTheFly
+if hasattr(kodo, 'OnTheFlyEncoderFactoryBinary'):
+    test_sets.append((kodo.OnTheFlyEncoderFactoryBinary,
+                      kodo.OnTheFlyDecoderFactoryBinary))
+if hasattr(kodo, 'OnTheFlyEncoderFactoryBinary4'):
+    test_sets.append((kodo.OnTheFlyEncoderFactoryBinary4,
+                      kodo.OnTheFlyDecoderFactoryBinary4))
+if hasattr(kodo, 'OnTheFlyEncoderFactoryBinary8'):
+    test_sets.append((kodo.OnTheFlyEncoderFactoryBinary8,
+                      kodo.OnTheFlyDecoderFactoryBinary8))
+if hasattr(kodo, 'OnTheFlyEncoderFactoryBinary16'):
+    test_sets.append((kodo.OnTheFlyEncoderFactoryBinary16,
+                      kodo.OnTheFlyDecoderFactoryBinary16))
 
-    # Perpetual
-    (kodo.PerpetualEncoderFactoryBinary,
-     kodo.PerpetualDecoderFactoryBinary),
-    (kodo.PerpetualEncoderFactoryBinary4,
-     kodo.PerpetualDecoderFactoryBinary4),
-    (kodo.PerpetualEncoderFactoryBinary8,
-     kodo.PerpetualDecoderFactoryBinary8),
-    (kodo.PerpetualEncoderFactoryBinary16,
-     kodo.PerpetualDecoderFactoryBinary16),
+# SlidingWindow
+if hasattr(kodo, 'SlidingWindowEncoderFactoryBinary'):
+    test_sets.append((kodo.SlidingWindowEncoderFactoryBinary,
+                      kodo.SlidingWindowDecoderFactoryBinary))
+if hasattr(kodo, 'SlidingWindowEncoderFactoryBinary4'):
+    test_sets.append((kodo.SlidingWindowEncoderFactoryBinary4,
+                      kodo.SlidingWindowDecoderFactoryBinary4))
+if hasattr(kodo, 'SlidingWindowEncoderFactoryBinary8'):
+    test_sets.append((kodo.SlidingWindowEncoderFactoryBinary8,
+                      kodo.SlidingWindowDecoderFactoryBinary8))
+if hasattr(kodo, 'SlidingWindowEncoderFactoryBinary16'):
+    test_sets.append((kodo.SlidingWindowEncoderFactoryBinary16,
+                      kodo.SlidingWindowDecoderFactoryBinary16))
 
-    # Carousel
-    (kodo.NoCodeEncoderFactory,
-     kodo.NoCodeDecoderFactory),
+# Perpetual
+if hasattr(kodo, 'PerpetualEncoderFactoryBinary'):
+    test_sets.append((kodo.PerpetualEncoderFactoryBinary,
+                      kodo.PerpetualDecoderFactoryBinary))
+if hasattr(kodo, 'PerpetualEncoderFactoryBinary4'):
+    test_sets.append((kodo.PerpetualEncoderFactoryBinary4,
+                      kodo.PerpetualDecoderFactoryBinary4))
+if hasattr(kodo, 'PerpetualEncoderFactoryBinary8'):
+    test_sets.append((kodo.PerpetualEncoderFactoryBinary8,
+                      kodo.PerpetualDecoderFactoryBinary8))
+if hasattr(kodo, 'PerpetualEncoderFactoryBinary16'):
+    test_sets.append((kodo.PerpetualEncoderFactoryBinary16,
+                      kodo.PerpetualDecoderFactoryBinary16))
 
-    # Fulcrum
-    (kodo.FulcrumEncoderFactoryBinary4,
-     kodo.FulcrumDecoderFactoryBinary4),
-    (kodo.FulcrumEncoderFactoryBinary8,
-     kodo.FulcrumDecoderFactoryBinary8),
-    (kodo.FulcrumEncoderFactoryBinary16,
-     kodo.FulcrumDecoderFactoryBinary16),
-]
+# Carousel
+if hasattr(kodo, 'NoCodeEncoderFactory'):
+    test_sets.append((kodo.NoCodeEncoderFactory,
+                      kodo.NoCodeDecoderFactory))
+
+# Fulcrum
+if hasattr(kodo, 'FulcrumEncoderFactoryBinary4'):
+    test_sets.append((kodo.FulcrumEncoderFactoryBinary4,
+                      kodo.FulcrumDecoderFactoryBinary4))
+if hasattr(kodo, 'FulcrumEncoderFactoryBinary8'):
+    test_sets.append((kodo.FulcrumEncoderFactoryBinary8,
+                      kodo.FulcrumDecoderFactoryBinary8))
+if hasattr(kodo, 'FulcrumEncoderFactoryBinary16'):
+    test_sets.append((kodo.FulcrumEncoderFactoryBinary16,
+                      kodo.FulcrumDecoderFactoryBinary16))
 
 
 class TestVersion(unittest.TestCase):

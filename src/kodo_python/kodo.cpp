@@ -63,18 +63,26 @@ std::string version()
 #ifdef STEINWURF_FIFI_VERSION
     version += std::string(STEINWURF_FIFI_VERSION);
 #endif
-    version += std::string("\n\tkodo-fulcrum: ");
-#ifdef STEINWURF_KODO_FULCRUM_VERSION
-    version += std::string(STEINWURF_KODO_FULCRUM_VERSION);
-#endif
+
     version += std::string("\n\tkodo-core: ");
 #ifdef STEINWURF_KODO_CORE_VERSION
     version += std::string(STEINWURF_KODO_CORE_VERSION);
 #endif
+
+#if !defined(KODO_PYTHON_DISABLE_FULCRUM)
+    version += std::string("\n\tkodo-fulcrum: ");
+#ifdef STEINWURF_KODO_FULCRUM_VERSION
+    version += std::string(STEINWURF_KODO_FULCRUM_VERSION);
+#endif
+#endif
+
+#if !defined(KODO_PYTHON_DISABLE_RLNC)
     version += std::string("\n\tkodo-rlnc: ");
 #ifdef STEINWURF_KODO_RLNC_VERSION
     version += std::string(STEINWURF_KODO_RLNC_VERSION);
 #endif
+#endif
+
     version += std::string("\n\tmeta: ");
 #ifdef STEINWURF_META_VERSION
     version += std::string(STEINWURF_META_VERSION);
