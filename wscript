@@ -6,8 +6,7 @@ import os
 APPNAME = 'kodo-python'
 VERSION = '12.0.0'
 
-codecs = ['nocode', 'full_vector', 'on_the_fly', 'sliding_window',
-          'perpetual', 'fulcrum']
+codecs = ['nocode', 'rlnc', 'perpetual', 'fulcrum']
 
 
 def options(opt):
@@ -19,6 +18,10 @@ def options(opt):
     opts.add_option(
         '--disable_rlnc', default=None, dest='disable_rlnc',
         action='store_true', help="Disable the basic RLNC codecs")
+
+    opts.add_option(
+        '--disable_perpetual', default=None, dest='disable_perpetual',
+        action='store_true', help="Disable the Perpetual RLNC codecs")
 
     opts.add_option(
         '--disable_fulcrum', default=None, dest='disable_fulcrum',
@@ -40,13 +43,18 @@ def configure(conf):
        not conf.has_dependency_path('kodo-rlnc'):
         conf.env['DEFINES_KODO_PYTHON_COMMON'] += ['KODO_PYTHON_DISABLE_RLNC']
         disabled_codec_groups += 1
+    if conf.has_tool_option('disable_perpetual') or \
+       not conf.has_dependency_path('kodo-perpetual'):
+        conf.env['DEFINES_KODO_PYTHON_COMMON'] += \
+            ['KODO_PYTHON_DISABLE_PERPETUAL']
+        disabled_codec_groups += 1
     if conf.has_tool_option('disable_fulcrum') or \
        not conf.has_dependency_path('kodo-fulcrum'):
         conf.env['DEFINES_KODO_PYTHON_COMMON'] += \
             ['KODO_PYTHON_DISABLE_FULCRUM']
         disabled_codec_groups += 1
 
-    if disabled_codec_groups == 2:
+    if disabled_codec_groups == 3:
         conf.fatal('All codec groups are disabled or unavailable. Please make '
                    'sure that you enable at least one codec group and you '
                    'have access to the corresponding repositories!')
@@ -88,11 +96,30 @@ def build(bld):
     bld.env['CFLAGS_PYEXT'] = []
     bld.env['CXXFLAGS_PYEXT'] = []
 
+    extra_linkflags = []
     CXX = bld.env.get_flat("CXX")
     if 'g++' in CXX or 'clang' in CXX:
         bld.env.append_value('CXXFLAGS', '-fPIC')
+    # Matches MSVC
+    if 'CL.exe' in CXX or 'cl.exe' in CXX:
+        extra_linkflags = ['/EXPORT:initkodo']
 
-    bld.recurse('src/kodo_python')
+    bld(features='cxx cxxshlib pyext',
+        source=bld.path.ant_glob('src/kodo_python/**/*.cpp'),
+        target='kodo',
+        name='kodo-python',
+        linkflags=extra_linkflags,
+        use=[
+            'STEINWURF_VERSION',
+            'KODO_PYTHON_COMMON',
+            'boost_includes',
+            'boost_python',
+            'kodo_core',
+            'kodo_rlnc',
+            'kodo_perpetual',
+            'kodo_fulcrum'
+        ]
+    )
 
     if bld.is_toplevel():
         if bld.has_tool_option('run_tests'):
@@ -102,7 +129,7 @@ def build(bld):
 def exec_test_python(bld):
     python = bld.env['PYTHON'][0]
     env = dict(os.environ)
-    env['PYTHONPATH'] = os.path.join(bld.out_dir, 'src', 'kodo_python')
+    env['PYTHONPATH'] = os.path.join(bld.out_dir)
 
     # First, run the unit tests in the 'test' folder
     if os.path.exists('test'):
@@ -118,3 +145,4 @@ def exec_test_python(bld):
                 example = os.path.join('examples', f)
                 bld.cmd_and_log(
                     '{0} {1} --dry-run\n'.format(python, example), env=env)
+                print('-------------------------------\n')
