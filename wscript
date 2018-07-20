@@ -4,7 +4,7 @@
 import os
 
 APPNAME = 'kodo-python'
-VERSION = '12.0.0'
+VERSION = '13.0.0'
 
 codecs = ['nocode', 'rlnc', 'perpetual', 'fulcrum']
 

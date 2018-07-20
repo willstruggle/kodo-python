@@ -7,6 +7,9 @@ every change, see the Git log.
 Latest
 ------
 * tbd
+
+13.0.0
+------
 * Major: Changed all coders to work with shallow storage, so the user needs to
   create a bytearray object where the encoder/decoder can store the symbols.
   Make sure to call set_const_symbols() before using an encoder and
