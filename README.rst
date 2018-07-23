@@ -80,7 +80,7 @@ so that Python distutils can detect your new compiler.
 Building From Source
 --------------------
 
-It is recommended to build the Python bindings from source.
+You need to build the Python bindings from source.
 
 First, clone the project::
 
@@ -96,9 +96,9 @@ After building the project, you should find the resulting ``kodo.so``,
 ``kodo.dylib`` or ``kodo.pyd`` file here (the actual path and extension
 depend on your OS)::
 
-  build/linux/src/kodo_python/kodo.so
-  build/darwin/src/kodo_python/kodo.dylib
-  build/win32/src/kodo_python/kodo.pyd
+  build/linux/kodo.so
+  build/darwin/kodo.dylib
+  build/win32/kodo.pyd
 
 You can copy this file to the same folder as your Python scripts, or you
 can copy it to your PYTHONPATH (so that you can import it from anywhere).
@@ -113,12 +113,12 @@ Special Options
 With the ``enable_codecs`` option, you can configure kodo-python to only enable
 some desired codecs and disable all others. For example::
 
-    python waf configure --enable_codecs=full_vector
+    python waf configure --enable_codecs=rlnc
 
 Run ``python waf --help`` to list the available codecs. You can even
 select multiple codecs with a comma-separated list::
 
-    python waf configure --enable_codecs=full_vector,on_the_fly,nocode
+    python waf configure --enable_codecs=rlnc,fulcrum
 
 Compilation Issues on Linux
 ...........................
@@ -126,30 +126,25 @@ Compilation Issues on Linux
 The compilation process might take a long time on certain Linux systems if
 less than 4 GB RAM is available. The g++ optimizer might consume a lot of RAM
 during the compilation, so if you see that all your RAM is used up, then
-it is recommended to constrain the number of parallel jobs to one during the
+you can try to constrain the number of parallel jobs to only one during the
 build step::
 
     python waf build -j 1
 
-With this change, a fast compilation is possible with 2 GB RAM.
+With this change, a fast compilation is possible with only 2 GB RAM.
 
-This issue is specific to g++ (which is the default compiler on Linux), but
+This issue is specific to g++ (which is the default compiler on Linux), and
 the RAM usage and the compilation time can be much better with clang.
 The code produced by clang is also fast.
 
 If the compilation does not work with g++, then you can install clang like
 this (on Ubuntu and Debian)::
 
-    sudo apt-get install clang-3.5
+    sudo apt-get install clang
 
-Then you should configure the project with the appropriate mkspec. Use the
-following command on 32-bit Linux::
+Then you can configure the project to use clang++::
 
-    python waf configure --cxx_mkspec=cxx_clang35_x86
-
-Or use this one on 64-bit Linux::
-
-    python waf configure --cxx_mkspec=cxx_clang35_x64
+    CXX=clang++ python waf configure
 
 Compiling on the Raspberry Pi
 .............................
