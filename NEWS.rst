@@ -7,6 +7,9 @@ every change, see the Git log.
 Latest
 ------
 * tbd
+* Minor: Added the pure recoder from kodo-rlnc. The coder can be instantiated
+  using the kodo.RLNCPureRecoderFactory. The encode_pure_recode_decode_simple
+  example shows how to change the recoder_symbols parameter.
 
 13.0.0
 ------

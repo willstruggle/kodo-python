@@ -9,6 +9,7 @@
 
 #include "encoder.hpp"
 #include "decoder.hpp"
+#include "recoder.hpp"
 #include "factory.hpp"
 
 namespace kodo_python
@@ -29,5 +30,14 @@ void create_factory_and_decoder(const std::string& stack)
     factory<Coder>(stack);
     // Then create the corresponding decoder type
     decoder<Coder>(stack);
+}
+
+template<class Coder>
+void create_factory_and_recoder(const std::string& stack)
+{
+    // First create the factory type
+    factory<Coder>(stack);
+    // Then create the corresponding recoder type
+    recoder<Coder>(stack);
 }
 }

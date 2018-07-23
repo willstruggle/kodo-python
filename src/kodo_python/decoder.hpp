@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -80,10 +81,15 @@ void decoder(const std::string& name)
 
     auto decoder_class =
         coder<Coder>(name)
+        .def("rank", &decoder_type::rank,
+             "Return the current rank of the decoder.\n\n"
+             "The rank of a decoder indicates how many symbols have been "
+             "decoded or partially decoded.\n\n"
+             "\t:returns: The rank.\n")
         .def("read_payload", &read_payload<decoder_type>,
              arg("symbol_data"),
-             "Decode the provided encoded symbol.\n\n"
-             "\t:param symbol_data: The encoded symbol.\n")
+             "Decode the provided encoded payload.\n\n"
+             "\t:param symbol_data: The encoded payload.\n")
         .def("is_complete", &decoder_type::is_complete,
              "Check whether decoding is complete.\n\n"
              "\t:returns: True if the decoding is complete.\n")

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -69,9 +70,14 @@ void encoder(const std::string& name)
 
     auto encoder_class =
         coder<Coder>(name)
+        .def("rank", &encoder_type::rank,
+             "Return the current rank of the encoder.\n\n"
+             "The rank of an encoder indicates how many symbols are\n"
+             "available for encoding.\n\n"
+             "\t:returns: The rank.\n")
         .def("write_payload", &encoder_write_payload<encoder_type>,
-             "Generate a encoded symbol.\n\n"
-             "\t:returns: The encoded symbol.\n")
+             "Generate an encoded payload.\n\n"
+             "\t:returns: The bytearray containing the encoded payload.\n")
         .def("set_const_symbols", &set_const_symbols<encoder_type>,
              arg("symbols"),
              "Set the symbols to be encoded.\n\n"

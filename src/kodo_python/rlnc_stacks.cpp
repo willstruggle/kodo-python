@@ -83,6 +83,29 @@ struct extra_factory_methods<kodo_rlnc::encoder>
     }
 };
 
+template<>
+struct extra_factory_methods<kodo_rlnc::pure_recoder>
+{
+    template<class FactoryClass>
+    extra_factory_methods(FactoryClass& factory_class)
+    {
+        using boost::python::arg;
+
+        factory_class
+        .def("recoder_symbols",
+             &FactoryClass::wrapped_type::recoder_symbols,
+             "Return the the number of internal symbols that should be\n"
+             "stored in the recoder.\n\n"
+             "\t:returns: The number of recoder symbols.\n")
+        .def("set_recoder_symbols",
+             &FactoryClass::wrapped_type::set_recoder_symbols,
+             arg("symbols"),
+             "Set the number of recoder symbols for coders to be created\n"
+             "with this factory.\n\n"
+             "\t:param symbols: The number of recoder symbols to use.\n");
+    }
+};
+
 void create_rlnc_stacks()
 {
     using namespace boost::python;
@@ -94,6 +117,7 @@ void create_rlnc_stacks()
 
     create_factory_and_encoder<kodo_rlnc::encoder>("RLNCEncoder");
     create_factory_and_decoder<kodo_rlnc::decoder>("RLNCDecoder");
+    create_factory_and_recoder<kodo_rlnc::pure_recoder>("RLNCPureRecoder");
 }
 }
 

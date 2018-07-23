@@ -47,12 +47,6 @@ auto coder(const std::string& name) ->
         .def("symbols", &coder_type::symbols,
              "Return the number of symbols in this block coder.\n\n"
              "\t:returns: The number of symbols in this block coder.\n")
-        .def("rank", &coder_type::rank,
-             "Return the rank.\n\n"
-             "The rank of a decoder states how many symbols have been "
-             "decoded or partially decoded. The rank of an encoder states "
-             "how many symbols are available for encoding.\n\n"
-             "\t:returns: The rank.\n")
         .def("set_trace_callback", &set_trace_callback<coder_type>,
              boost::python::arg("callback"),
              "Write the trace information to a callback.\n\n"
