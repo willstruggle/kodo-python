@@ -5,6 +5,10 @@
 
 #if !defined(KODO_PYTHON_DISABLE_RLNC)
 
+// boost/python.hpp should be the first include in every .cpp file to work
+// around this bug: https://bugs.python.org/issue10910
+#include <boost/python.hpp>
+
 #include <kodo_rlnc/coders.hpp>
 
 #include "create_helpers.hpp"
