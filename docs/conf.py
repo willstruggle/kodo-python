@@ -12,16 +12,14 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import glob
 import os
-import readline
 import sys
 from sphinx.errors import ConfigError
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-kodo_dir = '../build_current/src/kodo_python/'
+kodo_dir = os.path.join('..', 'build_current', 'src', 'kodo_python')
 
 if not os.path.exists(kodo_dir):
     raise ConfigError(
