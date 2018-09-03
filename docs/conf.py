@@ -16,21 +16,17 @@ import glob
 import os
 import readline
 import sys
-
+from sphinx.errors import ConfigError
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-default = '../build/linux/src/kodo_python/'
+kodo_dir = '../build_current/src/kodo_python/'
 
-readline.set_completer_delims(' \t\n;')
-readline.parse_and_bind("tab: complete")
-readline.set_completer(lambda text, state: (glob.glob(text+'*')+[None])[state])
-kodo_dir = raw_input("Where is the kodo.so file located[{}]: ".format(default))
-print bool(kodo_dir)
-print kodo_dir
-if not kodo_dir:
-    kodo_dir = default
+if not os.path.exists(kodo_dir):
+    raise ConfigError(
+        '\nUnable to find the path "{}"'.format(kodo_dir) +
+        '\nDid you successfully build to kodo-python library?')
 
 sys.path.insert(0, os.path.abspath(kodo_dir))
 
