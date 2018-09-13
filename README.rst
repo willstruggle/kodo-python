@@ -74,7 +74,38 @@ Then set the ``VS90COMNTOOLS`` environment variable to::
 
   C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
 
-so that Python distutils can detect your new compiler.
+so that Python distutils can detect your new compiler masquerading as
+Visual Studio 2008 (which is the original compiler for Python 2.7).
+
+distutils must be able to find a valid location for ``vcvarsall.bat`` and
+it will call that batch file to obtain some compile flags. If you can execute
+the following test script without getting an exception, then you should be able
+to configure kodo-python using waf::
+
+    if __name__ == "__main__":
+        from distutils import log
+        log.set_threshold(log.DEBUG)
+        from distutils.msvccompiler import MSVCCompiler
+        dist_compiler = MSVCCompiler()
+        dist_compiler.initialize()
+        print("Compile options:")
+        print(dist_compiler.compile_options)
+        print("LDFLAGS:")
+        print(dist_compiler.ldflags_shared)
+
+If you only have Visual Studio 2017, then setting ``VS90COMNTOOLS`` is
+not sufficient, because the location of ``vcvarsall.bat`` has changed with
+respect to the Common Tools folder. In this case, you can apply this
+one-liner patch to ``msvc9compiler.py`` in your ``Python27\Lib\distutils``
+folder: https://bugs.python.org/file45916/vsforpython.diff
+
+After this, you can set ``VS90COMNTOOLS`` to the folder that actually contains
+``vcvarsall.bat`` (this depends on the version of VS2017 that you installed)::
+
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\WDExpress\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build
 
 
 Building From Source
