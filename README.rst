@@ -66,6 +66,21 @@ also be available. If you are having trouble with the pre-installed Python
 version, then you can install a more recent Python version with MacPorts or
 Homebrew.
 
+If you are running Homebrew on OSX 10.14 Mojave, then you should be aware that
+Homebrew's Python 2.7.15 has some broken include paths, so we cannot compile
+C++ Python modules with that version. To work around this issue, you can
+downgrade to Python 2.7.14 using the following commands::
+
+    cd /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula
+    git log --follow python@2.rb
+    git checkout -b python2-2.7.14_3 aa6726ba11
+    brew reinstall ./python@2.rb
+    brew pin python@2
+    git checkout master
+
+The ``brew pin`` command ensures that Python 2 will not be upgraded if
+you run ``brew upgrade`` in the future.
+
 Windows
 .......
 
