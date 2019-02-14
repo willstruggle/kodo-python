@@ -1,11 +1,10 @@
-Compiling on Raspberry Pi (both 1 and 2)
-========================================
+Compiling on Raspberry Pi
+=========================
 
 Before you start, make sure you have the following at your ready:
 
-* A valid license to the Kodo library.
-* Fully functioning Raspberry Pi with Raspbian or something similar installed.
-* An **empty** USB stick with minimum of 1GB space (only needed for Raspberry Pi 1).
+* A valid license for the Kodo library.
+* Fully functioning Raspberry Pi with Raspbian 9 (Strecth) installed.
 * Some way to interact with your Raspberry Pi (keyboard or SSH access).
 * An Internet Connection for your Raspberry Pi.
 * ~30 minutes worth of coffee or similar beverage (~1.5 hours for Raspberry Pi 1).
@@ -19,30 +18,20 @@ First, update your package manager::
 
 You are now ready to install the required packages::
 
-    sudo apt-get install git-core build-essential python-dev g++-4.9
+    sudo apt-get install git-core build-essential python-dev g++
 
 Also make sure that ``libpython`` is installed (this might be done automatically when 
 ``python-dev`` is installed). On my Raspberry Pi 1, the package was called `libpython2.7`,
 but on my Raspberry Pi 2 it was called `libpython-dev`. This will depend on your
 distribution.
 
-We need to make sure that the default compiler is g++ 4.9 (or later) on the Raspberry Pi.
+We need to make sure that the default compiler is g++ 6.3 (or later) on the Raspberry Pi.
 You can quickly check the default version like this::
 
     g++ --version
-    
-    g++ (Raspbian 4.9.2-10+deb8u1) 4.9.2
-    Copyright (C) 2014 Free Software Foundation, Inc.
-    This is free software; see the source for copying conditions.  There is NO
-    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-
-If you see an older version, you can change the default using update-alternatives::
-
-    sudo update-alternatives --remove-all gcc
-    sudo update-alternatives --remove-all g++
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 40 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-4.9
+If you see an older version, please remove the corresponding packages or change the
+default using update-alternatives.
 
 You have configured the Raspberry Pi so that it's ready for compiling kodo-python.
 Clone the repository::
@@ -69,7 +58,7 @@ following the instructions below::
     
     virtual memory exhausted: Cannot allocate memory
 
-The build step takes about 30 minutes on RPi 2 and several hours on RPi 1.
+The build step takes about 30 minutes on RPi 2 and 3 (but it could be a few hours on RPi 1).
 
 .. image:: https://imgs.xkcd.com/comics/compiling.png
     :target: https://xkcd.com/303/
@@ -77,29 +66,32 @@ The build step takes about 30 minutes on RPi 2 and several hours on RPi 1.
 
 Finally enjoy your freshly made kodo-python for the Raspberry Pi!!!
 
-Adding swap on a USB drive
-..........................
-
+Increasing swapfile size
+........................
 Because the compilation of kodo-python is rather memory-intensive, the installed
-memory and swap are not sufficient (the Pi 1 runs out of memory).
-Therefore we need to use an external USB drive as extra swap. To set this up,
-plug in the USB drive and execute the following command to find the drive ID::
+memory and swapfile are not sufficient (the Pi 1 will run out of memory).
 
-    sudo fdisk -l
+The default swapfile size on Raspbian is only 100 MB, but you can easily
+increase this size following this guide:
+https://www.bitpi.co/2015/02/11/how-to-change-raspberry-pis-swapfile-size-on-rasbian/
 
-When you found the drive ID, execute the following commands, replacing `sdx1`
-with your drive ID. The drive ID I got was `sda1`::
+Edit the following file::
 
-    sudo umount /dev/sdx1
-    sudo mkswap /dev/sdx1
-    sudo swapon -p 32767 /dev/sdx1
+    sudo nano /etc/dphys-swapfile
+    
+Increase the swapfile size to 1024 MB::
+    
+    CONF_SWAPSIZE=1024
 
-To check whether the swap was installed correctly execute the following command:
+Restart the dphys-swapfile service::
+
+    sudo /etc/init.d/dphys-swapfile restart
+
+Check that the swapfile was correctly resized::
 
     cat /proc/swaps
 
 The command should output something like this::
 
     Filename      Type          Size  Used  Priority
-    /var/swap     file        102396     0        -1
-    /dev/sdx1     partition  4029096     0     32767
+    /var/swap     file       1048572     0        -2
