@@ -8,6 +8,10 @@ Latest
 ------
 * tbd
 
+13.1.1
+------
+* Patch: Fixed Python header warnings on certain Linux platforms.
+
 13.1.0
 ------
 * Minor: Added the pure recoder from kodo-rlnc. The coder can be instantiated
