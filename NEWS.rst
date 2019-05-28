@@ -7,6 +7,9 @@ every change, see the Git log.
 Latest
 ------
 * tbd
+
+14.0.0
+------
 * Minor: Added the following functions to provide access to the low-level
   Symbol API of the coder objects:
     - encoder.generate()
