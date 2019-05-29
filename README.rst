@@ -59,27 +59,27 @@ If you are using Python 3, you'll need to install ``libpython3-dev`` instead.
 Mac OSX
 .......
 
-Install the latest XCode and Command Line Tools from the Mac Store.
+Install the latest Command Line Tools and/or XCode to compile this project.
+The latest tested version is 10.2.1, so please upgrade if your CLT or XCode
+is older than that.
 
-Python 2.7 is pre-installed on OSX, and the required Python headers should
-also be available. If you are having trouble with the pre-installed Python
-version, then you can install a more recent Python version with MacPorts or
-Homebrew.
+Python 2.7.10 is pre-installed on OSX, but some required Python headers are
+missing, so you need to install a more recent Python version from Homebrew
+(or Macports).
 
-If you are running Homebrew on OSX 10.14 Mojave, then you should be aware that
-Homebrew's Python 2.7.15 has some broken include paths, so we cannot compile
-C++ Python modules with that version. To work around this issue, you can
-downgrade to Python 2.7.14 using the following commands::
+You can choose to install Homebrew's Python 2 which will become the default
+Python on your system, so you can call waf using the ``python`` command::
 
-    cd /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula
-    git log --follow python@2.rb
-    git checkout -b python2-2.7.14_3 aa6726ba11
-    brew reinstall ./python@2.rb
-    brew pin python@2
-    git checkout master
+    brew install python@2
+    python waf configure
+    python waf build
 
-The ``brew pin`` command ensures that Python 2 will not be upgraded if
-you run ``brew upgrade`` in the future.
+You can also choose Homebrew's Python 3, but then you must always use the
+``python3`` command for invoking waf::
+
+    brew install python3
+    python3 waf configure
+    python3 waf build
 
 Windows
 .......
