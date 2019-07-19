@@ -84,13 +84,18 @@ You can also choose Homebrew's Python 3, but then you must always use the
 Windows
 .......
 
-Install Python 2.7 (32-bit) and Visual Studio Express 2015 for Windows Desktop.
+Install Python 2.7 and Visual Studio Express 2015 for Windows Desktop.
 Then set the ``VS90COMNTOOLS`` environment variable to::
 
   C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
 
 so that Python distutils can detect your new compiler masquerading as
 Visual Studio 2008 (which is the original compiler for Python 2.7).
+
+It is important to note that you need to install 32-bit Python for a 32-bit
+VS toolchain and you need 64-bit Python for a 64-bit VS toolchain.
+Some Visual Studio versions only provide a 32-bit toolchain, so this could be
+an easier option.
 
 distutils must be able to find a valid location for ``vcvarsall.bat`` and
 it will call that batch file to obtain some compile flags. If you can execute
