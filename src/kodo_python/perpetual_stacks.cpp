@@ -9,7 +9,10 @@
 
 #include <kodo_perpetual/coders.hpp>
 
-#include "create_helpers.hpp"
+#include "encoder.hpp"
+#include "decoder.hpp"
+#include "optional_encoder_methods.hpp"
+#include "optional_decoder_methods.hpp"
 #include "symbol_decoding_status_updater_methods.hpp"
 #include "systematic_encoder_methods.hpp"
 
@@ -24,6 +27,21 @@ struct extra_encoder_methods<kodo_perpetual::encoder>
         using pybind11::arg;
 
         encoder_class
+        .def("produce_symbol",
+             &encoder_produce_symbol<typename EncoderClass::type>,
+             arg("coefficients"),
+             "Generate an encoded symbol using the given coefficients.\n\n"
+             "\t:param coefficients: The coding coefficients.\n"
+             "\t:returns: The bytearray containing the encoded symbol.\n")
+        .def("produce_systematic_symbol",
+             &encoder_produce_systematic_symbol<typename EncoderClass::type>,
+             arg("index"),
+             "Return a systematic symbol for the given symbol index.\n\n"
+             "\t:param index: The symbol index with the coding block.\n"
+             "\t:returns: The bytearray containing the systematic symbol.\n")
+        .def("generate", &encoder_generate<typename EncoderClass::type>,
+             "Generate some coding coefficients.\n\n"
+             "\t:returns: The bytearray containing the coding coefficients.\n")
         .def("set_seed",
              &EncoderClass::type::set_seed, arg("seed"),
              "Set the seed of the coefficient generator.\n\n"
@@ -76,12 +94,24 @@ struct extra_decoder_methods<kodo_perpetual::decoder>
         using pybind11::arg;
 
         decoder_class
+        .def("consume_symbol", &consume_symbol<typename DecoderClass::type>,
+             arg("symbol_data"), arg("coefficients"),
+             "Decode the provided encoded symbol with the provided coding "
+             "coefficients.\n\n"
+             "\t:param symbol_data: The encoded payload.\n"
+             "\t:param coefficients: The coding coefficients.\n")
+        .def("consume_systematic_symbol",
+             &consume_systematic_symbol<typename DecoderClass::type>,
+             arg("symbol_data"), arg("index"),
+             "Decode the provided systematic symbol.\n\n"
+             "\t:param symbol_data: The systematic symbol.\n"
+             "\t:param index: The index of this systematic symbol.\n")
         .def("set_seed",
              &DecoderClass::type::set_seed, arg("seed"),
              "Set the seed of the coefficient generator.\n\n"
              "\t:param seed: The seed value.\n")
-        .def("write_payload",
-             &decoder_write_payload<typename DecoderClass::type>,
+        .def("produce_payload",
+             &decoder_produce_payload<typename DecoderClass::type>,
              "Recode symbol.\n\n"
              "\t:returns: The recoded symbol.\n");
 
@@ -91,8 +121,8 @@ struct extra_decoder_methods<kodo_perpetual::decoder>
 
 void create_perpetual_stacks(pybind11::module& m)
 {
-    create_factory_and_encoder<kodo_perpetual::encoder>(m, "PerpetualEncoder");
-    create_factory_and_decoder<kodo_perpetual::decoder>(m, "PerpetualDecoder");
+    encoder<kodo_perpetual::encoder>(m, "PerpetualEncoder");
+    decoder<kodo_perpetual::decoder>(m, "PerpetualDecoder");
 }
 }
 

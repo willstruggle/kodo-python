@@ -9,7 +9,8 @@
 
 #include <kodo_fulcrum/coders.hpp>
 
-#include "create_helpers.hpp"
+#include "encoder.hpp"
+#include "decoder.hpp"
 #include "systematic_encoder_methods.hpp"
 
 namespace kodo_python
@@ -18,7 +19,17 @@ namespace kodo_python
 template<class CoderClass>
 static void fulcrum_coder_methods(CoderClass& coder_class)
 {
+    using namespace pybind11;
+
     coder_class
+    .def(init<fifi::finite_field, uint32_t, uint32_t, uint32_t>(),
+         arg("field"), arg("symbols"), arg("symbol_size"),
+         arg("expansion"),
+         "Fulcrum coder constructor.\n\n"
+         "\t:param field: The finite field to use.\n"
+         "\t:param symbols: The number of symbols in a block.\n"
+         "\t:param symbol_size: The size of a symbol in bytes.\n"
+         "\t:param expansion: The number of expansion symbols.\n")
     .def("expansion",
          &CoderClass::type::expansion,
          "Get the expansion which denotes the number of additional "
@@ -28,25 +39,6 @@ static void fulcrum_coder_methods(CoderClass& coder_class)
          &CoderClass::type::inner_symbols,
          "Get the number of symbols in the inner code.\n\n"
          "\t:returns: The number of symbols in the inner code.\n");
-}
-
-
-template<class FactoryClass>
-static void fulcrum_factory_methods(FactoryClass& factory_class)
-{
-    using pybind11::arg;
-
-    factory_class
-    .def("expansion",
-         &FactoryClass::type::expansion,
-         "Get the expansion which denotes the number of additional "
-         "symbols created by the outer code.\n\n"
-         "\t:returns: The expansion used.\n")
-    .def("set_expansion",
-         &FactoryClass::type::set_expansion,
-         arg("expansion"),
-         "Set the number of expansion symbols.\n\n"
-         "\t:param expansion: The number of expansion symbols to use.\n");
 }
 
 template<>
@@ -78,30 +70,10 @@ struct extra_decoder_methods<kodo_fulcrum::decoder>
     }
 };
 
-template<>
-struct extra_factory_methods<kodo_fulcrum::encoder>
-{
-    template<class FactoryClass>
-    extra_factory_methods(FactoryClass& factory_class)
-    {
-        fulcrum_factory_methods(factory_class);
-    }
-};
-
-template<>
-struct extra_factory_methods<kodo_fulcrum::decoder>
-{
-    template<class FactoryClass>
-    extra_factory_methods(FactoryClass& factory_class)
-    {
-        fulcrum_factory_methods(factory_class);
-    }
-};
-
 void create_fulcrum_stacks(pybind11::module& m)
 {
-    create_factory_and_encoder<kodo_fulcrum::encoder>(m, "FulcrumEncoder");
-    create_factory_and_decoder<kodo_fulcrum::decoder>(m, "FulcrumDecoder");
+    encoder<kodo_fulcrum::encoder>(m, "FulcrumEncoder");
+    decoder<kodo_fulcrum::decoder>(m, "FulcrumDecoder");
 }
 }
 

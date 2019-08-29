@@ -21,7 +21,7 @@ def main():
     coding stacks that support it.
     Systematic coding is used to reduce the amount of work done by an
     encoder and a decoder. This is achieved by initially sending all
-    symbols which has not previously been sent uncoded. Kodo allows this
+    symbols which has not previously been sent decoded. Kodo allows this
     feature to be optionally turn of or off.
     """
     # Choose the finite field, the number of symbols (i.e. generation size)
@@ -30,24 +30,20 @@ def main():
     symbols = 10
     symbol_size = 160
 
-    # Create an encoder/decoder factory that are used to build the
-    # actual encoders/decoders
-    encoder_factory = kodo.RLNCEncoderFactory(field, symbols, symbol_size)
-    encoder = encoder_factory.build()
-
-    decoder_factory = kodo.RLNCDecoderFactory(field, symbols, symbol_size)
-    decoder = decoder_factory.build()
+    # Create an encoder and a decoder
+    encoder = kodo.RLNCEncoder(field, symbols, symbol_size)
+    decoder = kodo.RLNCDecoder(field, symbols, symbol_size)
 
     # Generate some random data to encode. We create a bytearray of the same
     # size as the encoder's block size and assign it to the encoder.
     # This bytearray must not go out of scope while the encoder exists!
     data_in = bytearray(os.urandom(encoder.block_size()))
-    encoder.set_const_symbols(data_in)
+    encoder.set_symbols_storage(data_in)
 
     # Define the data_out bytearray where the symbols should be decoded
     # This bytearray must not go out of scope while the encoder exists!
     data_out = bytearray(decoder.block_size())
-    decoder.set_mutable_symbols(data_out)
+    decoder.set_symbols_storage(data_out)
 
     print("Starting encoding / decoding...")
 
@@ -67,21 +63,21 @@ def main():
                     encoder.set_systematic_on()
 
         # Encode a packet into the payload buffer
-        packet = encoder.write_payload()
+        packet = encoder.produce_payload()
 
         if random.choice([True, False]):
             print("Packet dropped.")
             continue
 
         # Pass that packet to the decoder
-        decoder.read_payload(packet)
+        decoder.consume_payload(packet)
 
         print("Rank of decoder {}".format(decoder.rank()))
 
         # Symbols that were received in the systematic phase correspond
         # to the original source symbols and are therefore marked as
         # decoded
-        print("Symbols decoded {}".format(decoder.symbols_uncoded()))
+        print("Symbols decoded {}".format(decoder.symbols_decoded()))
 
     # The decoder is complete, the decoded symbols are now available in
     # the data_out buffer: check if it matches the data_in buffer
