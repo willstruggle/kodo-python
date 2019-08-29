@@ -7,6 +7,9 @@ every change, see the Git log.
 Latest
 ------
 * tbd
+
+15.0.0
+------
 * Major: The factories were removed from the top-level Encoder/Decoder
   and PureRecoder classes. Therefore new coder instances can be
   created using the normal constructor.
