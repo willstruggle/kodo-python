@@ -38,7 +38,7 @@ Requirements
 
 First of all, follow `this Getting Started guide
 <http://docs.steinwurf.com/getting_started.html>`_ to install
-the basic tools required for the compilation (C++11 compiler, Git, Python).
+the basic tools required for the compilation (C++14 compiler, Git, Python).
 
 The compilers used by Steinwurf are listed at the bottom of the
 `buildbot page <http://buildbot.steinwurf.com>`_.
@@ -84,21 +84,36 @@ You can also choose Homebrew's Python 3, but then you must always use the
 Windows
 .......
 
-Install Python 2.7 and Visual Studio Express 2015 for Windows Desktop.
-Then set the ``VS90COMNTOOLS`` environment variable to::
+First of all, you need to install Visual Studio 2017. There are many variants,
+but you should basically get the same C++14 compiler: VS Express, Community,
+Professional, Enterprise or the standalone Build Tools might all work.
 
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
+You can choose to install Python 2.7 or Python 3.7+. It is very important to
+install **32-bit Python** for a 32-bit VS toolchain and you need
+**64-bit Python** for a 64-bit VS toolchain. Some Visual Studio versions only
+provide a 32-bit toolchain, so this might be the only option.
 
-so that Python distutils can detect your new compiler masquerading as
-Visual Studio 2008 (which is the original compiler for Python 2.7).
+If you installed Python 2.7, then you need to set the ``VS90COMNTOOLS``
+environment variable to point to the folder that actually contains
+``vcvarsall.bat`` (this depends on the version of VS2017 that you installed)::
 
-It is important to note that you need to install 32-bit Python for a 32-bit
-VS toolchain and you need 64-bit Python for a 64-bit VS toolchain.
-Some Visual Studio versions only provide a 32-bit toolchain, so this could be
-an easier option.
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\WDExpress\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build
 
-distutils must be able to find a valid location for ``vcvarsall.bat`` and
-it will call that batch file to obtain some compile flags. If you can execute
+If you installed Python 3.7+, then you need to set the ``VS140COMNTOOLS``
+environment variable to point to the folder that actually contains
+``vcvarsall.bat`` (this depends on the version of VS2017 that you installed)::
+
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\WDExpress\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build
+
+After setting the appropriate environment variable, you need to make sure that
+Python's distutils can find a valid location for ``vcvarsall.bat``, because
+waf will call that batch file to obtain some compiler flags. If you can execute
 the following test script without getting an exception, then you should be able
 to configure kodo-python using waf::
 
@@ -113,19 +128,13 @@ to configure kodo-python using waf::
         print("LDFLAGS:")
         print(dist_compiler.ldflags_shared)
 
-If you only have Visual Studio 2017, then setting ``VS90COMNTOOLS`` is
-not sufficient, because the location of ``vcvarsall.bat`` has changed with
-respect to the Common Tools folder. In this case, you can apply this
-one-liner patch to ``msvc9compiler.py`` in your ``Python27\Lib\distutils``
-folder: https://bugs.python.org/file45916/vsforpython.diff
+If you have any issues with the test script, then most likely you need to
+apply this one-liner patch to ``msvc9compiler.py`` in ``Python27\Lib\distutils``
+or ``Python37\Lib\distutils``: https://bugs.python.org/file45916/vsforpython.diff
 
-After this, you can set ``VS90COMNTOOLS`` to the folder that actually contains
-``vcvarsall.bat`` (this depends on the version of VS2017 that you installed)::
-
-    C:\Program Files (x86)\Microsoft Visual Studio\2017\WDExpress\VC\Auxiliary\Build
-    C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
-    C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build
-    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build
+The problem is that the location of ``vcvarsall.bat`` has changed with
+respect to the Common Tools folder, so distutils cannot find it without
+the patch. The issue is explained here: https://bugs.python.org/issue23246
 
 
 Building From Source
