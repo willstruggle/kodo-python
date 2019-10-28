@@ -6,6 +6,10 @@ every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+16.0.0
+------
 * Minor: Added generate function on the RLNCDecoder.
 * Minor: Added minimal overhead example.
 * Major: Upgrade to kodo-core 23, kodo-rlnc 16, kodo-perpetual 5,
