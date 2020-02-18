@@ -71,6 +71,6 @@ pybind11::class_<Coder> coder(pybind11::module& m, const std::string& name)
              "\t:param zone_prefix: The zone prefix to append to all "
              "tracing zones.");
 
-    return std::move(coder_class);
+    return coder_class;
 }
 }
