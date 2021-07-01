@@ -23,6 +23,16 @@ Block API
    block_generator_rs_cauchy
    block_generator_parity_2d
 
+Slide API
+=========
+.. toctree::
+   :maxdepth: 2
+
+   slide_encoder
+   slide_decoder
+   slide_rate_controller
+   slide_generator_random_uniform
+   
 Perpetual API
 =============
 .. toctree::
