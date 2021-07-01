@@ -4,7 +4,7 @@ News for kodo-python
 This file lists the major changes between versions. For a more detailed list of
 every change, see the Git log.
 
-Latest
+17.0.0
 ------
 * Major: Rewrite repository to use the new kodo repository.
 * Minor: Update To Evaluation License 1.3.

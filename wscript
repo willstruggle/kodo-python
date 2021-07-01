@@ -5,7 +5,7 @@ import os
 from waflib.Build import BuildContext
 
 APPNAME = "kodo-python"
-VERSION = "1.0.0"
+VERSION = "17.0.0"
 
 
 def options(opt):
