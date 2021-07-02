@@ -4,6 +4,14 @@ News for kodo-python
 This file lists the major changes between versions. For a more detailed list of
 every change, see the Git log.
 
+Latest
+------
+* tbd
+
+17.0.1
+------
+* Patch: Added missing kodo.slide documentation.
+
 17.0.0
 ------
 * Major: Rewrite repository to use the new kodo repository.
