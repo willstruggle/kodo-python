@@ -32,5 +32,5 @@ some example applications showing the usage of the API.
 
 Documentation can be found here: 
 
-* `latest <kodo-python.steinwurf.com/latest>`_.
-* `stable <kodo-python.steinwurf.com/stable>`_.
+* `latest <https://kodo-python.steinwurf.com/latest>`_.
+* `stable <https://kodo-python.steinwurf.com/stable>`_.
