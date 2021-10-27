@@ -30,31 +30,6 @@ MCAST_GRP = "224.1.1.1"
 MCAST_PORT = 5007
 
 
-def multicast_save_decoder_state(decoder: kodo.perpetual.Decoder, data_out: bytearray):
-    if decoder.is_complete():
-        if path.exists("decoder_state"):
-            os.remove("decoder_state")
-
-        if path.exists("data_out"):
-            os.remove("data_out")
-
-    else:
-        state_data = bytearray(decoder.state_bytes())
-        decoder.save_state(state_data)
-        state_file = open("decoder_state", "wb")
-        state_file.write(state_data)
-        state_file.close()
-
-        outputfile = open("data_out", "wb")
-        outputfile.write(data_out)
-        outputfile.close()
-
-
-def multicast_restore_decoder_state():
-    state = bytearray(open("decoder_state", "rb").read())
-    return kodo.perpetual.Decoder.restore_state(state)
-
-
 def multicast_load_data_out():
     return bytearray(open("data_out", "rb").read())
 
@@ -99,14 +74,7 @@ def main():
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
     decoder = None
-    if path.exists("decoder_state"):
-        decoder = multicast_restore_decoder_state()
-        assert path.exists("data_out")
-        data_out = multicast_load_data_out()
-        decoder.set_symbols_storage(data_out)
-
     generator = None
-    coefficients = None
 
     print("Processing...")
     while True:
@@ -116,34 +84,27 @@ def main():
         header_data = packet
         symbol = bytearray(packet[27:])
 
-        seed, offset, field_byte, block_bytes, symbol_bytes, width = struct.unpack_from(
+        seed, offset, width_byte, block_bytes, symbol_bytes, width = struct.unpack_from(
             "<QQBIIH", header_data
         )
-        print(seed, offset, field_byte, block_bytes, symbol_bytes, width)
-        field = kodo.FiniteField.from_value(field_byte)
+        print(seed, offset, width_byte, block_bytes, symbol_bytes)
+        width = kodo.perpetual.Width.from_value(width_byte)
 
         if (
             decoder is None
-            or field != decoder.field
+            or width != decoder.width
             or block_bytes != decoder.block_bytes
             or symbol_bytes != decoder.symbol_bytes
-            or width != decoder.width
         ):
-            decoder = kodo.perpetual.Decoder(field)
-            decoder.configure(block_bytes, symbol_bytes, width)
+            decoder = kodo.perpetual.Decoder(width)
+            decoder.configure(block_bytes, symbol_bytes)
             data_out = bytearray(decoder.block_bytes)
             decoder.set_symbols_storage(data_out)
 
         if generator is None:
-            generator = kodo.perpetual.generator.RandomUniform(decoder.field)
-            generator.configure(decoder.symbols, decoder.width)
-            coefficients = bytearray(generator.max_coefficients_bytes)
-            atexit.register(multicast_save_decoder_state, decoder, data_out)
+            generator = kodo.perpetual.generator.RandomUniform(decoder.width)
 
-        generator.set_seed(seed)
-        generator.set_offset(offset)
-
-        generator.generate(coefficients)
+        coefficients = generator.generate(seed)
 
         old_rank = decoder.rank
         decoder.decode_symbol(symbol, coefficients, offset)
@@ -151,10 +112,8 @@ def main():
         if decoder.rank != old_rank:
             print(f"Decoder rank: {decoder.rank}/{decoder.symbols}")
 
-        if decoder.can_complete_decoding():
+        if decoder.is_complete():
             break
-
-    decoder.complete_decoding()
 
     f = open(args.output_file, "wb")
     f.write(data_out)

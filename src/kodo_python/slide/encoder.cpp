@@ -45,20 +45,21 @@ struct encoder_wrapper : kodo::slide::encoder
     encoder_wrapper(kodo::finite_field field) : kodo::slide::encoder(field)
     {
     }
-    std::function<void(const std::string&)> m_log_callback;
+    std::function<void(const std::string&, const std::string&)> m_log_callback;
     kodo::slide::stream<pybind11::object> m_stream;
 };
 using encoder_type = encoder_wrapper;
 
-void slide_encoder_enable_log(encoder_type& encoder,
-                              std::function<void(const std::string&)> callback)
+void slide_encoder_enable_log(
+    encoder_type& encoder,
+    std::function<void(const std::string&, const std::string&)> callback)
 {
     encoder.m_log_callback = callback;
     encoder.enable_log(
-        [](const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data) {
             encoder_type* encoder = static_cast<encoder_type*>(data);
             assert(encoder->m_log_callback);
-            encoder->m_log_callback(message);
+            encoder->m_log_callback(name, message);
         },
         &encoder);
 }
@@ -292,7 +293,13 @@ void encoder(pybind11::module& m)
              "log messages.")
         .def("disable_log", &encoder_type::disable_log, "Disables the log.\n")
         .def("is_log_enabled", &encoder_type::is_log_enabled,
-             "Return True if log is enabled, otherwise False.\n");
+             "Return True if log is enabled, otherwise False.\n")
+        .def("set_log_name", &encoder_type::set_log_name, arg("name"),
+             "Set a log name which will be included with log messages produced "
+             "by this object.\n\n"
+             "\t:param name: The chosen name for the log")
+        .def("log_name", &encoder_type::log_name,
+             "Return the log name assigned to this object.\n");
 }
 }
 }

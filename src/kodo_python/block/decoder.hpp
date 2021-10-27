@@ -39,7 +39,7 @@ struct decoder_wrapper : kodo::block::decoder
     decoder_wrapper(kodo::finite_field field) : kodo::block::decoder(field)
     {
     }
-    std::function<void(const std::string&)> m_log_callback;
+    std::function<void(const std::string&, const std::string&)> m_log_callback;
 };
 
 using decoder_type = decoder_wrapper;

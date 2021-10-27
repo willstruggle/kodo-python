@@ -47,20 +47,21 @@ struct rs_cauchy_wrapper : kodo::block::generator::rs_cauchy
         kodo::block::generator::rs_cauchy(field)
     {
     }
-    std::function<void(const std::string&)> m_log_callback;
+    std::function<void(const std::string&, const std::string&)> m_log_callback;
 };
 
 using rs_cauchy_type = rs_cauchy_wrapper;
 
 void generator_rs_cauchy_enable_log(
-    rs_cauchy_type& generator, std::function<void(const std::string&)> callback)
+    rs_cauchy_type& generator,
+    std::function<void(const std::string&, const std::string&)> callback)
 {
     generator.m_log_callback = callback;
     generator.enable_log(
-        [](const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data) {
             rs_cauchy_type* generator = static_cast<rs_cauchy_type*>(data);
             assert(generator->m_log_callback);
-            generator->m_log_callback(message);
+            generator->m_log_callback(name, message);
         },
         &generator);
 }
@@ -154,7 +155,13 @@ void rs_cauchy(pybind11::module& m)
             "\t:param callback: The callback used for handling log messages.\n")
         .def("disable_log", &rs_cauchy_type::disable_log, "Disables the log.\n")
         .def("is_log_enabled", &rs_cauchy_type::is_log_enabled,
-             "Return True if log is enabled, otherwise False.\n");
+             "Return True if log is enabled, otherwise False.\n")
+        .def("set_log_name", &rs_cauchy_type::set_log_name, arg("name"),
+             "Set a log name which will be included with log messages produced "
+             "by this object.\n\n"
+             "\t:param name: The chosen name for the log")
+        .def("log_name", &rs_cauchy_type::log_name,
+             "Return the log name assigned to this object.\n");
 }
 }
 }

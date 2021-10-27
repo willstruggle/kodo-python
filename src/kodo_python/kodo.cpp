@@ -38,9 +38,8 @@
 #include "perpetual/decoder.hpp"
 #include "perpetual/encoder.hpp"
 #include "perpetual/generator/random_uniform.hpp"
-#include "perpetual/offset/random_sequence.hpp"
 #include "perpetual/offset/random_uniform.hpp"
-#include "perpetual/offset/sequential_sequence.hpp"
+#include "perpetual/width.hpp"
 
 #include "slide/decoder.hpp"
 #include "slide/encoder.hpp"
@@ -77,6 +76,7 @@ PYBIND11_MODULE(kodo, m)
     auto perpetual = m.def_submodule("perpetual", "Perpetual codec");
     perpetual::encoder(perpetual);
     perpetual::decoder(perpetual);
+    perpetual::width(perpetual);
 
     auto perpetual_generator =
         perpetual.def_submodule("generator", "Perpetual codec generator");
@@ -85,8 +85,6 @@ PYBIND11_MODULE(kodo, m)
     auto perpetual_offset =
         perpetual.def_submodule("offset", "Perpetual codec offset");
     perpetual::offset::random_uniform(perpetual_offset);
-    perpetual::offset::random_sequence(perpetual_offset);
-    perpetual::offset::sequential_sequence(perpetual_offset);
 
     auto slide = m.def_submodule("slide", "Sliding window codec");
     slide::encoder(slide);

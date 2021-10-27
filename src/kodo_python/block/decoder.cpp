@@ -38,15 +38,16 @@ inline namespace STEINWURF_KODO_PYTHON_VERSION
 namespace block
 {
 
-void block_decoder_enable_log(decoder_type& decoder,
-                              std::function<void(const std::string&)> callback)
+void block_decoder_enable_log(
+    decoder_type& decoder,
+    std::function<void(const std::string&, const std::string&)> callback)
 {
     decoder.m_log_callback = callback;
     decoder.enable_log(
-        [](const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data) {
             decoder_type* decoder = static_cast<decoder_type*>(data);
             assert(decoder->m_log_callback);
-            decoder->m_log_callback(message);
+            decoder->m_log_callback(name, message);
         },
         &decoder);
 }
@@ -265,7 +266,14 @@ void decoder(pybind11::module& m)
             "\t:param callback: The callback used for handling log messages.\n")
         .def("disable_log", &decoder_type::disable_log, "Disables the log.\n")
         .def("is_log_enabled", &decoder_type::is_log_enabled,
-             "Return True if log is enabled, otherwise False.\n");
+             "Return True if log is enabled, otherwise False.\n")
+        .def("set_log_name", &decoder_type::set_log_name, arg("name"),
+             "Set a log name which will be included with log messages produced "
+             "by this object.\n\n"
+             "\t:param name: The chosen name for the log")
+        .def("log_name", &decoder_type::log_name,
+             "Return the log name assigned to this object.\n");
+    ;
 }
 }
 }

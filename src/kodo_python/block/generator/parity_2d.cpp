@@ -43,20 +43,21 @@ namespace generator
 {
 struct parity_2d_wrapper : kodo::block::generator::parity_2d
 {
-    std::function<void(const std::string&)> m_log_callback;
+    std::function<void(const std::string&, const std::string&)> m_log_callback;
 };
 
 using parity_2d_type = parity_2d_wrapper;
 
 void generator_parity_2d_enable_log(
-    parity_2d_type& generator, std::function<void(const std::string&)> callback)
+    parity_2d_type& generator,
+    std::function<void(const std::string&, const std::string&)> callback)
 {
     generator.m_log_callback = callback;
     generator.enable_log(
-        [](const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data) {
             parity_2d_type* generator = static_cast<parity_2d_type*>(data);
             assert(generator->m_log_callback);
-            generator->m_log_callback(message);
+            generator->m_log_callback(name, message);
         },
         &generator);
 }
@@ -160,7 +161,13 @@ void parity_2d(pybind11::module& m)
              "\t:param callback: The callback which handles the log message.")
         .def("disable_log", &parity_2d_type::disable_log, "Disables the log.\n")
         .def("is_log_enabled", &parity_2d_type::is_log_enabled,
-             "Return True if log is enabled, otherwise False.\n");
+             "Return True if log is enabled, otherwise False.\n")
+        .def("set_log_name", &parity_2d_type::set_log_name, arg("name"),
+             "Set a log name which will be included with log messages produced "
+             "by this object.\n\n"
+             "\t:param name: The chosen name for the log")
+        .def("log_name", &parity_2d_type::log_name,
+             "Return the log name assigned to this object.\n");
 }
 }
 }

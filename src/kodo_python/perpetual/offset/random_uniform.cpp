@@ -42,22 +42,22 @@ namespace offset
 {
 struct random_uniform_wrapper : kodo::perpetual::offset::random_uniform
 {
-    std::function<void(const std::string&)> m_log_callback;
+    std::function<void(const std::string&, const std::string&)> m_log_callback;
 };
 
 using random_uniform_type = random_uniform_wrapper;
 
 void offset_random_uniform_enable_log(
     random_uniform_type& offset_generator,
-    std::function<void(const std::string&)> callback)
+    std::function<void(const std::string&, const std::string&)> callback)
 {
     offset_generator.m_log_callback = callback;
     offset_generator.enable_log(
-        [](const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data) {
             random_uniform_type* offset_generator =
                 static_cast<random_uniform_type*>(data);
             assert(offset_generator->m_log_callback);
-            offset_generator->m_log_callback(message);
+            offset_generator->m_log_callback(name, message);
         },
         &offset_generator);
 }
@@ -70,23 +70,14 @@ void random_uniform(pybind11::module m)
         "Generates a random uniform offset for the perpetual code.")
         .def(init<>(), "The RandomUniform constructor.\n")
         .def("configure", &random_uniform_type::configure, arg("symbols"),
-             arg("width"),
              "Configure the offset generator with the given parameters. This "
              "is useful for reusing an existing coder. Note that the "
              "reconfiguration always implies a reset, so the coder will be in "
              "a clean state after this operation.\n\n"
-             "\t:param symbols: The number of symbols in a coding block.\n"
-             "\t:param width: The width is the number of randomly generated "
-             "coefficients.")
-        .def(
-            "reset", &random_uniform_type::reset,
-            "Resets the generator to the state when it was first configured.\n")
+             "\t:param symbols: The number of symbols in a coding block.\n")
         .def_property_readonly(
             "symbols", &random_uniform_type::symbols,
             "Return the number of symbols supported by this generator.\n")
-        .def_property_readonly(
-            "width", &random_uniform_type::width,
-            "Return the width of the generator in symbols.\n")
         .def("offset", &random_uniform_type::offset,
              "Return the next offset.\n")
         .def("set_seed", &random_uniform_type::set_seed, arg("seed"),
@@ -99,7 +90,13 @@ void random_uniform(pybind11::module m)
         .def("disable_log", &random_uniform_type::disable_log,
              "Disables the log.\n")
         .def("is_log_enabled", &random_uniform_type::is_log_enabled,
-             "Return True if log is enabled, otherwise False.\n");
+             "Return True if log is enabled, otherwise False.\n")
+        .def("set_log_name", &random_uniform_type::set_log_name, arg("name"),
+             "Set a log name which will be included with log messages produced "
+             "by this object.\n\n"
+             "\t:param name: The chosen name for the log")
+        .def("log_name", &random_uniform_type::log_name,
+             "Return the log name assigned to this object.\n");
 }
 }
 }

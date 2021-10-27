@@ -66,27 +66,21 @@ def main():
         print("{} is not a valid file.".format(args.file_path))
         sys.exit(1)
 
-    field = kodo.FiniteField.binary8
-
     file_stats = os.stat(args.file_path)
     block_bytes = file_stats.st_size
 
     symbol_bytes = 1400
     symbols = block_bytes // symbol_bytes + 1
-    width = 10
-
-    if symbols < width:
-        width = symbols
+    width = kodo.perpetual.Width._8
 
     # Create and configure the encoder, coefficient generator and offset generator.
-    encoder = kodo.perpetual.Encoder(field)
-    encoder.configure(block_bytes, symbol_bytes, width)
+    encoder = kodo.perpetual.Encoder(width)
+    encoder.configure(block_bytes, symbol_bytes)
 
-    generator = kodo.perpetual.generator.RandomUniform(field)
-    generator.configure(symbols, width)
+    generator = kodo.perpetual.generator.RandomUniform(width)
 
-    offset_generator = kodo.perpetual.offset.RandomSequence()
-    offset_generator.configure(symbols, width)
+    offset_generator = kodo.perpetual.offset.RandomUniform()
+    offset_generator.configure(symbols)
 
     sock = socket.socket(
         family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP
@@ -109,7 +103,6 @@ def main():
 
     address = (args.ip, args.port)
 
-    coefficients = bytearray(generator.max_coefficients_bytes)
     symbol = bytearray(encoder.symbol_bytes)
 
     header_data = bytearray(27)
@@ -121,11 +114,9 @@ def main():
 
         # Generate an encoded packet.
         seed = random.randint(0, 2 ** 64 - 1)
-        generator.set_seed(seed)
 
         offset = offset_generator.offset()
-        generator.set_offset(offset)
-        generator.generate(coefficients)
+        coefficients = generator.generate(seed)
 
         encoder.encode_symbol(symbol, coefficients, offset)
 
@@ -135,7 +126,7 @@ def main():
             0,
             seed,
             offset,
-            field.value,
+            width.value,
             block_bytes,
             symbol_bytes,
             width,

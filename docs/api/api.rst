@@ -32,7 +32,7 @@ Slide API
    slide_decoder
    slide_rate_controller
    slide_generator_random_uniform
-   
+
 Perpetual API
 =============
 .. toctree::
@@ -40,7 +40,6 @@ Perpetual API
 
    perpetual_encoder
    perpetual_decoder
+   perpetual_width
    perpetual_generator_random_uniform
-   perpetual_offset_sequential_sequence
    perpetual_offset_random_uniform
-   perpetual_offset_random_sequence

@@ -1,7 +1,7 @@
 Multicast Example
 =================
 
-In this example consists of two files, one for the receiver and 
+In this example consists of two files, one for the receiver and
 one for the sender.
 
 Sender

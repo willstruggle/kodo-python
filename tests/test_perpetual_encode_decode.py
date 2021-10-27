@@ -23,195 +23,60 @@ import kodo
 
 
 class TestPerpetualEncodeDecode(unittest.TestCase):
-    def test_encode_decode_offset_random_sequence(self):
-        fields = [
-            kodo.FiniteField.binary,
-            kodo.FiniteField.binary4,
-            kodo.FiniteField.binary8,
-            kodo.FiniteField.binary16,
+    def test_encode_decode(self):
+        widths = [
+            kodo.perpetual.Width._8,
+            kodo.perpetual.Width._16,
+            kodo.perpetual.Width._32,
+            kodo.perpetual.Width._64,
         ]
-        for field in fields:
-            with self.subTest(field):
-                self.encode_decode_offset_random_sequence(field)
+        for width in widths:
+            with self.subTest(width):
+                self.encode_decode(width)
 
-    def encode_decode_offset_random_sequence(self, field):
+    def encode_decode(self, width):
 
         symbol_bytes = 1400
 
         block_bytes = 1000000
 
-        width = 100
+        encoder = kodo.perpetual.Encoder(width)
+        decoder = kodo.perpetual.Decoder(width)
 
-        encoder = kodo.perpetual.Encoder(field)
-        decoder = kodo.perpetual.Decoder(field)
+        encoder.configure(block_bytes, symbol_bytes)
+        decoder.configure(block_bytes, symbol_bytes)
 
-        encoder.configure(block_bytes, symbol_bytes, width)
-        decoder.configure(block_bytes, symbol_bytes, width)
-        self.assertEqual(encoder.width, width)
-        self.assertEqual(encoder.symbols, block_bytes // symbol_bytes + 1)
         self.assertEqual(encoder.symbol_bytes, symbol_bytes)
         self.assertEqual(encoder.block_bytes, block_bytes)
 
-        self.assertEqual(decoder.width, width)
-        self.assertEqual(decoder.symbols, block_bytes // symbol_bytes + 1)
         self.assertEqual(decoder.symbol_bytes, symbol_bytes)
         self.assertEqual(decoder.block_bytes, block_bytes)
 
-        generator = kodo.perpetual.generator.RandomUniform(field)
-        offset_generator = kodo.perpetual.offset.RandomSequence()
-
-        generator.configure(encoder.symbols, encoder.width)
-        offset_generator.configure(encoder.symbols, encoder.width)
-
-        symbol = bytearray(encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
-
-        data_in = bytearray(os.urandom(encoder.block_bytes))
-        encoder.set_symbols_storage(data_in)
-
-        data_out = bytearray(decoder.block_bytes)
-        decoder.set_symbols_storage(data_out)
-
-        while not decoder.is_complete():
-            offset = offset_generator.offset()
-
-            generator.set_offset(offset)
-            generator.generate(coefficients)
-
-            encoder.encode_symbol(symbol, coefficients, offset)
-
-            decoder.decode_symbol(symbol, coefficients, offset)
-
-            if decoder.can_complete_decoding():
-                decoder.complete_decoding()
-
-        self.assertEqual(data_in, data_out)
-
-    def test_encode_decode_offset_sequential_sequence(self):
-        fields = [
-            kodo.FiniteField.binary,
-            kodo.FiniteField.binary4,
-            kodo.FiniteField.binary8,
-            kodo.FiniteField.binary16,
-        ]
-        for field in fields:
-            with self.subTest(field):
-                self.encode_decode_offset_sequential_sequence(field)
-
-    def encode_decode_offset_sequential_sequence(self, field):
-
-        symbol_bytes = 1400
-
-        block_bytes = 1000000
-
-        width = 100
-
-        encoder = kodo.perpetual.Encoder(field)
-        decoder = kodo.perpetual.Decoder(field)
-
-        encoder.configure(block_bytes, symbol_bytes, width)
-        decoder.configure(block_bytes, symbol_bytes, width)
-        self.assertEqual(encoder.width, width)
-        self.assertEqual(encoder.symbols, block_bytes // symbol_bytes + 1)
-        self.assertEqual(encoder.symbol_bytes, symbol_bytes)
-        self.assertEqual(encoder.block_bytes, block_bytes)
-
-        self.assertEqual(decoder.width, width)
-        self.assertEqual(decoder.symbols, block_bytes // symbol_bytes + 1)
-        self.assertEqual(decoder.symbol_bytes, symbol_bytes)
-        self.assertEqual(decoder.block_bytes, block_bytes)
-
-        generator = kodo.perpetual.generator.RandomUniform(field)
-        offset_generator = kodo.perpetual.offset.SequentialSequence()
-
-        generator.configure(encoder.symbols, encoder.width)
-        offset_generator.configure(encoder.symbols, encoder.width)
-
-        symbol = bytearray(encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
-
-        data_in = bytearray(os.urandom(encoder.block_bytes))
-        encoder.set_symbols_storage(data_in)
-
-        data_out = bytearray(decoder.block_bytes)
-        decoder.set_symbols_storage(data_out)
-
-        while not decoder.is_complete():
-            offset = offset_generator.offset()
-
-            generator.set_offset(offset)
-            generator.generate(coefficients)
-
-            encoder.encode_symbol(symbol, coefficients, offset)
-
-            decoder.decode_symbol(symbol, coefficients, offset)
-
-            if decoder.can_complete_decoding():
-                decoder.complete_decoding()
-
-        self.assertEqual(data_in, data_out)
-
-    def test_encode_decode_offset_random_uniform(self):
-        fields = [
-            kodo.FiniteField.binary,
-            kodo.FiniteField.binary4,
-            kodo.FiniteField.binary8,
-            kodo.FiniteField.binary16,
-        ]
-        for field in fields:
-            with self.subTest(field):
-                self.encode_decode_offset_random_uniform(field)
-
-    def encode_decode_offset_random_uniform(self, field):
-
-        symbol_bytes = 1400
-
-        block_bytes = 1000000
-
-        width = 100
-
-        encoder = kodo.perpetual.Encoder(field)
-        decoder = kodo.perpetual.Decoder(field)
-
-        encoder.configure(block_bytes, symbol_bytes, width)
-        decoder.configure(block_bytes, symbol_bytes, width)
-        self.assertEqual(encoder.width, width)
-        self.assertEqual(encoder.symbols, block_bytes // symbol_bytes + 1)
-        self.assertEqual(encoder.symbol_bytes, symbol_bytes)
-        self.assertEqual(encoder.block_bytes, block_bytes)
-
-        self.assertEqual(decoder.width, width)
-        self.assertEqual(decoder.symbols, block_bytes // symbol_bytes + 1)
-        self.assertEqual(decoder.symbol_bytes, symbol_bytes)
-        self.assertEqual(decoder.block_bytes, block_bytes)
-
-        generator = kodo.perpetual.generator.RandomUniform(field)
+        generator = kodo.perpetual.generator.RandomUniform(width)
         offset_generator = kodo.perpetual.offset.RandomUniform()
 
-        generator.configure(encoder.symbols, encoder.width)
-        offset_generator.configure(encoder.symbols, encoder.width)
+        offset_generator.configure(encoder.symbols)
 
         symbol = bytearray(encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
 
         data_in = bytearray(os.urandom(encoder.block_bytes))
         encoder.set_symbols_storage(data_in)
 
         data_out = bytearray(decoder.block_bytes)
         decoder.set_symbols_storage(data_out)
+        seed = 0
 
         while not decoder.is_complete():
+
             offset = offset_generator.offset()
 
-            generator.set_offset(offset)
-            generator.generate(coefficients)
+            coefficients = generator.generate(seed)
 
             encoder.encode_symbol(symbol, coefficients, offset)
 
             decoder.decode_symbol(symbol, coefficients, offset)
 
-            if decoder.can_complete_decoding():
-                decoder.complete_decoding()
+            seed += 1
 
         self.assertEqual(data_in, data_out)
 

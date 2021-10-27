@@ -40,23 +40,28 @@ namespace perpetual
 
 struct encoder_wrapper : kodo::perpetual::encoder
 {
-    encoder_wrapper(kodo::finite_field field) : kodo::perpetual::encoder(field)
+    encoder_wrapper(kodo::perpetual::width width) :
+        kodo::perpetual::encoder(width)
     {
     }
-    std::function<void(const std::string&)> m_log_callback;
+    encoder_wrapper() : kodo::perpetual::encoder()
+    {
+    }
+    std::function<void(const std::string&, const std::string&)> m_log_callback;
 };
 
 using encoder_type = encoder_wrapper;
 
 void perpetual_encoder_enable_log(
-    encoder_type& encoder, std::function<void(const std::string&)> callback)
+    encoder_type& encoder,
+    std::function<void(const std::string&, const std::string&)> callback)
 {
     encoder.m_log_callback = callback;
     encoder.enable_log(
-        [](const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data) {
             encoder_type* encoder = static_cast<encoder_type*>(data);
             assert(encoder->m_log_callback);
-            encoder->m_log_callback(message);
+            encoder->m_log_callback(name, message);
         },
         &encoder);
 }
@@ -77,20 +82,13 @@ void perpetual_encoder_set_symbols_storage(
 
 void perpetual_encoder_encode_symbol(encoder_type& encoder,
                                      pybind11::handle symbol_handle,
-                                     pybind11::handle coefficients_handle,
-                                     std::size_t offset)
+                                     uint64_t coefficients, std::size_t offset)
 {
     PyObject* symbol_obj = symbol_handle.ptr();
-    PyObject* coefficients_obj = coefficients_handle.ptr();
 
     if (!PyByteArray_Check(symbol_obj))
     {
         throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
     }
 
     if ((std::size_t)PyByteArray_Size(symbol_obj) < encoder.symbol_bytes())
@@ -105,40 +103,61 @@ void perpetual_encoder_encode_symbol(encoder_type& encoder,
     }
 
     encoder.encode_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
-                          (uint8_t*)PyByteArray_AsString(coefficients_obj),
-                          offset);
+                          coefficients, offset);
 }
 
 void encoder(pybind11::module& m)
 {
     using namespace pybind11;
     class_<encoder_type>(m, "Encoder", "The Kodo perpetual encoder")
-        .def(init<kodo::finite_field>(), arg("field"),
+        .def(init<kodo::perpetual::width>(), arg("width"),
              "The perpetual encoder constructor\n\n"
-             "\t:param field: the chosen finite field.\n")
+             "\t:param width: the chosen coding width.\n")
         .def("configure", &encoder_type::configure, arg("block_bytes"),
-             arg("symbol_bytes"), arg("width"),
+             arg("symbol_bytes"), arg("outer_interval") = 8,
+             arg("outer_segments") = 8,
              "configure the encoder with the given parameters. This is also "
              "useful for reusing an existing coder. Note that the "
              "reconfiguration always implies a reset, so the encoder will be "
              "in a clean state after this operation.\n\n"
              "\t:param block_bytes: The size of the block in bytes.\n"
              "\t:param symbol_bytes: The size of a symbol in bytes.\n"
-             "\t:param width: The width of the encoding i.e. how many symbols "
-             "are combined for each encoded symbol.\n")
+             "\t:param outer_interval: The number of inner symbols between two"
+             "outer code symbols. If the outer interval is 0 no outer symbols "
+             "exists.\n"
+             "\t:param outer_segments: The number of width segments to code "
+             "outer symbols by. If outer_segments = 3 and width = 8, there are "
+             "3 * 8 = 24 symbols mixed in an outer symbol\n")
         .def("reset", &encoder_type::reset, "Reset the state of the encoder.\n")
-        .def_property_readonly("field", &encoder_type::field,
-                               "Return the configured finite field.\n")
         .def_property_readonly(
             "symbols", &encoder_type::symbols,
-            "Return the number of symbols supported by this encoder.\n")
+            "Return the total number of symbols, including zero symbols, data "
+            "symbols and outer symbols.\n")
+        .def_property_readonly("data_symbols", &encoder_type::data_symbols,
+                               "Return the number of data symbols.\n")
+        .def_property_readonly("outer_symbols", &encoder_type::outer_symbols,
+                               "Return the number of outer symbols.\n")
         .def_property_readonly("symbol_bytes", &encoder_type::symbol_bytes,
-                               "Return the size in bytes per the symbol "
+                               "Return the size in bytes per symbol "
                                "supported by this encoder.\n")
         .def_property_readonly(
             "width", &encoder_type::width,
             "Return the width of the encoding i.e. how many "
-            "symbols are combined for each encoded symbol.\n")
+            "symbols are combined for each encoded inner symbol.\n")
+        .def_property_readonly(
+            "outer_interval", &encoder_type::outer_interval,
+            "Return the interval between outer code symbols. As an example an\n"
+            "interval of 8 means that there are 8 data symbols between each "
+            "outer\n"
+            "code symbol, if the outer interval is 0 no outer symbols exists.")
+        .def_property_readonly(
+            "outer_segments", &encoder_type::outer_segments,
+            "Return The number of outer code segments - the outer code coding "
+            "vector\n"
+            "is composed of N number of Decoder.width bit segments. This also\n"
+            "means that the number of mixed symbols in an outer code symbol "
+            "is\n"
+            "Decoder.outer_segments * Decoder.width")
         .def_property_readonly("block_bytes", &encoder_type::block_bytes,
                                "Return the maximum number of bytes that can be "
                                "encoded with this encoder.\n")
@@ -164,7 +183,13 @@ void encoder(pybind11::module& m)
             "\t:param callback: The callback used for handling log messages.\n")
         .def("disable_log", &encoder_type::disable_log, "Disables the log.\n")
         .def("is_log_enabled", &encoder_type::is_log_enabled,
-             "Return True if log is enabled, otherwise False.\n");
+             "Return True if log is enabled, otherwise False.\n")
+        .def("set_log_name", &encoder_type::set_log_name, arg("name"),
+             "Set a log name which will be included with log messages produced "
+             "by this object.\n\n"
+             "\t:param name: The chosen name for the log")
+        .def("log_name", &encoder_type::log_name,
+             "Return the log name assigned to this object.\n");
 }
 }
 }
