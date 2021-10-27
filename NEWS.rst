@@ -6,6 +6,11 @@ every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+18.0.0
+------
+* Major: Upgrade to kodo 8.
 * Minor: Updated waf.
 
 17.0.1

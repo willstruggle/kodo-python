@@ -27,7 +27,7 @@ inline namespace STEINWURF_KODO_PYTHON_VERSION
 {
 std::string version()
 {
-    return "17.0.1";
+    return "18.0.0";
 }
 }
 }
