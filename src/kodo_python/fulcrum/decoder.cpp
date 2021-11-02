@@ -24,7 +24,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <kodo/block/decoder.hpp>
+#include <kodo/fulcrum/decoder.hpp>
 
 #include <cassert>
 #include <cstdint>
@@ -35,10 +35,10 @@ namespace kodo_python
 {
 inline namespace STEINWURF_KODO_PYTHON_VERSION
 {
-namespace block
+namespace fulcrum
 {
 
-void block_decoder_enable_log(
+void fulcrum_decoder_enable_log(
     decoder_type& decoder,
     std::function<void(const std::string&, const std::string&)> callback)
 {
@@ -52,9 +52,9 @@ void block_decoder_enable_log(
         &decoder);
 }
 
-void block_decoder_decode_symbol(decoder_type& decoder,
-                                 pybind11::handle symbol_handle,
-                                 pybind11::handle coefficients_handle)
+void fulcrum_decoder_decode_symbol(decoder_type& decoder,
+                                   pybind11::handle symbol_handle,
+                                   pybind11::handle coefficients_handle)
 {
     PyObject* symbol_obj = symbol_handle.ptr();
     PyObject* coefficients_obj = coefficients_handle.ptr();
@@ -79,9 +79,9 @@ void block_decoder_decode_symbol(decoder_type& decoder,
                           (uint8_t*)PyByteArray_AsString(coefficients_obj));
 }
 
-void block_decoder_decode_systematic_symbol(decoder_type& decoder,
-                                            pybind11::handle symbol_handle,
-                                            std::size_t index)
+void fulcrum_decoder_decode_systematic_symbol(decoder_type& decoder,
+                                              pybind11::handle symbol_handle,
+                                              std::size_t index)
 {
     PyObject* symbol_obj = symbol_handle.ptr();
 
@@ -99,8 +99,8 @@ void block_decoder_decode_systematic_symbol(decoder_type& decoder,
         (const uint8_t*)PyByteArray_AsString(symbol_obj), index);
 }
 
-void block_decoder_set_symbols_storage(decoder_type& decoder,
-                                       pybind11::handle symbols_storage_handle)
+void fulcrum_decoder_set_symbols_storage(
+    decoder_type& decoder, pybind11::handle symbols_storage_handle)
 {
     PyObject* symbols_storage_obj = symbols_storage_handle.ptr();
     if (!PyByteArray_Check(symbols_storage_obj))
@@ -112,9 +112,9 @@ void block_decoder_set_symbols_storage(decoder_type& decoder,
         (uint8_t*)PyByteArray_AsString(symbols_storage_obj));
 }
 
-void block_decoder_set_symbol_storage(decoder_type& decoder,
-                                      pybind11::handle symbol_storage_handle,
-                                      std::size_t index)
+void fulcrum_decoder_set_symbol_storage(decoder_type& decoder,
+                                        pybind11::handle symbol_storage_handle,
+                                        std::size_t index)
 {
     PyObject* symbol_storage_obj = symbol_storage_handle.ptr();
 
@@ -132,10 +132,10 @@ void block_decoder_set_symbol_storage(decoder_type& decoder,
         (uint8_t*)PyByteArray_AsString(symbol_storage_obj), index);
 }
 
-void block_decoder_recode_symbol(decoder_type& decoder,
-                                 pybind11::handle symbol_handle,
-                                 pybind11::handle coefficients_handle,
-                                 pybind11::handle coefficients_in_handle)
+void fulcrum_decoder_recode_symbol(decoder_type& decoder,
+                                   pybind11::handle symbol_handle,
+                                   pybind11::handle coefficients_handle,
+                                   pybind11::handle coefficients_in_handle)
 {
     PyObject* symbol_obj = symbol_handle.ptr();
     PyObject* coefficients_obj = coefficients_handle.ptr();
@@ -168,8 +168,8 @@ void block_decoder_recode_symbol(decoder_type& decoder,
         (const uint8_t*)PyByteArray_AsString(coefficients_in_obj));
 }
 
-pybind11::handle block_decoder_symbol_at(decoder_type& decoder,
-                                         std::size_t index)
+pybind11::handle fulcrum_decoder_symbol_at(decoder_type& decoder,
+                                           std::size_t index)
 {
     if (index >= decoder.symbols())
     {
@@ -183,74 +183,89 @@ pybind11::handle block_decoder_symbol_at(decoder_type& decoder,
 void decoder(pybind11::module& m)
 {
     using namespace pybind11;
-    class_<decoder_type>(m, "Decoder", "The Kodo block decoder")
+    class_<decoder_type>(m, "Decoder", "The Kodo fulcrum decoder")
         .def(init<kodo::finite_field>(), arg("field"),
-             "The block decoder constructor\n\n"
+             "The fulcrum decoder constructor\n\n"
              "\t:param field: the chosen finite field.\n")
         .def("configure", &decoder_type::configure, arg("symbols"),
-             arg("symbol_bytes"),
+             arg("symbol_bytes"), arg("expansion"),
              "Configure the decoder with the given parameters. This is also "
              "useful for reusing an existing coder. Note that the "
-             "reconfiguration always implies a reset, so the decoder will be "
+             "reconfiguration always implies a reset, so the decoder will be"
              "in a clean state after this operation.\n\n"
              "\t:param symbols: The number of symbols.\n"
-             "\t:param symbol_bytes: The size of a symbol in bytes.\n")
+             "\t:param symbol_bytes: The size of a symbol in bytes.\n"
+             "\t:param expansion: The number of expansion symbols to use.\n")
         .def("reset", &decoder_type::reset, "Reset the state of the decoder.\n")
         .def_property_readonly(
             "symbols", &decoder_type::symbols,
             "Return the number of symbols supported by this decoder.\n")
+        .def_property_readonly("inner_symbols", &decoder_type::inner_symbols,
+                               "Return the number of inner symbols.\n")
         .def_property_readonly(
             "symbol_bytes", &decoder_type::symbol_bytes,
             "Return the size in bytes per symbol supported by this decoder.\n")
         .def_property_readonly("field", &decoder_type::field,
-                               "Return the :class:`~kodo.FiniteField` used.\n")
-        .def("set_symbols_storage", &block_decoder_set_symbols_storage,
-             arg("symbols_storage"),
-             "Initialize all the symbols in the block.\n\n"
-             "\tparam symbols_storage: The buffer containing all the data for "
-             "the the block.")
-        .def("set_symbol_storage", &block_decoder_set_symbol_storage,
-             arg("symbol_storage"), arg("index"),
-             "Set a symbol to be encoded.\n\n"
-             "\t:param symbol_storage: The buffer containing all the data for "
-             "the block.\n"
-             "\t:param index: The index of the symbol. Note the index must be "
-             "equal to Decoder.rank() + 1.\n")
-        .def("symbol_at", &block_decoder_symbol_at, arg("index"),
-             "Get the memory for a symbol.\n\n"
-             "\t:param index: The index of the symbol to get.\n")
+                               "Return the :class:`~kodo.FiniteField` used in "
+                               "the decoder.\n")
+        .def_property_readonly("inner_field", &decoder_type::inner_field,
+                               "Return the :class:`~kodo.FiniteField` used in "
+                               "the inner decoder.\n")
+        .def_property_readonly("expansion", &decoder_type::expansion,
+                               "Return the expansion set for this decoder.\n")
         .def_property_readonly("block_bytes", &decoder_type::block_bytes,
-                               "Return the total number of bytes that can be "
-                               "encoded with this decoder.\n")
-        .def("decode_symbol", &block_decoder_decode_symbol, arg("symbol"),
-             arg("coefficients"),
-             "Feed a coded symbol to the decoder.\n\n"
-             "\t:param symbol: The data of the symbol assumed to be "
-             "symbol_bytes() bytes in size.\n"
-             "\t:param coefficients: The coding coefficients that describe the "
-             "encoding performed on the symbol.\n")
-        .def("decode_systematic_symbol",
-             &block_decoder_decode_systematic_symbol, arg("symbol"),
-             arg("index"),
-             "Feed a systematic, i.e, un-coded symbol to the decoder.\n\n"
-             "\t:param symbol: The data of the symbol assumed to be "
-             "symbol_bytes() bytes in size.\n"
-             "\t:param index: The index of the given symbol.")
+                               "Return the total number of bytes that is "
+                               "currently being decoded with this decoder.\n")
         .def_property_readonly("rank", &decoder_type::rank,
                                "Return the rank of the decoder.\n")
-        .def("recode_symbol", &block_decoder_recode_symbol,
-             arg("symbol_storage"), arg("coefficients"), arg("coefficients_in"),
+        .def_property_readonly("inner_rank", &decoder_type::inner_rank,
+                               "Return the rank of the inner decoder.\n")
+        .def("set_symbols_storage", &fulcrum_decoder_set_symbols_storage,
+             arg("symbols_storage"),
+             "Set the symbols to be decoded.\n\n"
+             "\t:param symbols_storage: The buffer containing all the data for "
+             "the block.\n")
+        .def("set_symbol_storage", &fulcrum_decoder_set_symbol_storage,
+             arg("symbol_storage"), arg("index"),
+             "Set a symbol to be decoded.\n\n"
+             "\t:param symbol_storage: The buffer containing all the data for "
+             "the block.\n"
+             "\t:param index: The index of the symbol.\n")
+        .def(
+            "decode_symbol", &fulcrum_decoder_decode_symbol, arg("symbol"),
+            arg("coefficients"),
+            "feed a coded symbol to the decoder.\n\n"
+            "\t:param symbol: The bytearray containing the data of the encoded "
+            "symbol. Assumed to contain at least symbol_bytes bytes.\n"
+            "\t:param coefficients: The coding coefficients that describe the "
+            "encoding of the symbol.\n")
+        .def("decode_systematic_symbol",
+             &fulcrum_decoder_decode_systematic_symbol, arg("symbol"),
+             arg("index"),
+             "Feeds a systematic, i.e, un-coded symbol to the decoder.\n\n"
+             "\t:param symbol: The bytearray containing the data of the "
+             "systematic symbol assumed to contain at least symbol_bytes "
+             "bytes.\n"
+             "\t:param index: The index of the systematic symbol to produce.\n")
+        .def("recode_symbol", &fulcrum_decoder_recode_symbol, arg("symbol"),
+             arg("coefficients"), arg("coefficients_in"),
              "Recodes a new encoded symbol given the passed encoding "
-             "coeffcients. Coefficient values for symbols not seen must be 0. "
-             "This can be ensured, e.g., by using the RandomUniform "
-             "generator's generate_recode() function.\n\n"
-             ":param symbol: This is the memory where the encoded symbol will "
-             "be produced. This buffer must be large enough to store "
-             "symbol_bytes() bytes.\n"
-             ":param coefficients: These are the coding coefficients.\n"
-             ":param coefficients_in: These are the input coding "
+             "coefficients. Coefficient values for symbols not seen must be 0. "
+             "This can be ensured e.g. by using the RandomUniform generator's "
+             "RandomUniform.generate_recode() function.\n\n"
+             "\t:param symbol: The bytearray to which the recoded symbol will "
+             "be written. Must contain at least symbol_bytes bytes.\n"
+             "\t:param coefficients: The coding coefficients.\n"
+             "\t:param coefficients_in: These are the input coding "
              "coefficients.\n")
+        .def("symbol_at", &fulcrum_decoder_symbol_at, arg("index"),
+             "Return the bytearray containing the data of the symbol.\n\n"
+             "\t:param index: The index of the symbol.\n")
         .def("is_symbol_pivot", &decoder_type::is_symbol_pivot, arg("index"),
+             "Return True if the decoder contains a pivot at the specific "
+             "index.\n")
+        .def("is_inner_symbol_pivot", &decoder_type::is_inner_symbol_pivot,
+             arg("index"),
              "Return True if the decoder contains a pivot at the specific "
              "index.\n")
         .def("is_symbol_decoded", &decoder_type::is_symbol_decoded,
@@ -261,7 +276,7 @@ void decoder(pybind11::module& m)
              "Return True if the decoder is complete, when this is true the "
              "content stored in symbols_storage is decoded.\n")
         .def(
-            "enable_log", &block_decoder_enable_log, arg("callback"),
+            "enable_log", &fulcrum_decoder_enable_log, arg("callback"),
             "Enable logging for this decoder.\n\n"
             "\t:param callback: The callback used for handling log messages.\n")
         .def("disable_log", &decoder_type::disable_log, "Disables the log.\n")

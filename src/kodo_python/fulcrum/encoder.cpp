@@ -24,7 +24,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <kodo/block/encoder.hpp>
+#include <kodo/fulcrum/encoder.hpp>
 
 #include <cassert>
 #include <cstdint>
@@ -35,12 +35,12 @@ namespace kodo_python
 {
 inline namespace STEINWURF_KODO_PYTHON_VERSION
 {
-namespace block
+namespace fulcrum
 {
 
-struct encoder_wrapper : kodo::block::encoder
+struct encoder_wrapper : kodo::fulcrum::encoder
 {
-    encoder_wrapper(kodo::finite_field field) : kodo::block::encoder(field)
+    encoder_wrapper(kodo::finite_field field) : kodo::fulcrum::encoder(field)
     {
     }
     std::function<void(const std::string&, const std::string&)> m_log_callback;
@@ -48,7 +48,7 @@ struct encoder_wrapper : kodo::block::encoder
 
 using encoder_type = encoder_wrapper;
 
-void block_encoder_enable_log(
+void fulcrum_encoder_enable_log(
     encoder_type& encoder,
     std::function<void(const std::string&, const std::string&)> callback)
 {
@@ -62,9 +62,9 @@ void block_encoder_enable_log(
         &encoder);
 }
 
-void block_encoder_encode_symbol(encoder_type& encoder,
-                                 pybind11::handle symbol_handle,
-                                 pybind11::handle coefficients_handle)
+void fulcrum_encoder_encode_symbol(encoder_type& encoder,
+                                   pybind11::handle symbol_handle,
+                                   pybind11::handle coefficients_handle)
 {
     PyObject* symbol_obj = symbol_handle.ptr();
     PyObject* coefficients_obj = coefficients_handle.ptr();
@@ -89,9 +89,9 @@ void block_encoder_encode_symbol(encoder_type& encoder,
                           (uint8_t*)PyByteArray_AsString(coefficients_obj));
 }
 
-void block_encoder_encode_systematic_symbol(encoder_type& encoder,
-                                            pybind11::handle storage_handle,
-                                            std::size_t index)
+void fulcrum_encoder_encode_systematic_symbol(encoder_type& encoder,
+                                              pybind11::handle storage_handle,
+                                              std::size_t index)
 {
     PyObject* symbol_obj = storage_handle.ptr();
 
@@ -109,8 +109,8 @@ void block_encoder_encode_systematic_symbol(encoder_type& encoder,
                                      index);
 }
 
-void block_encoder_set_symbols_storage(encoder_type& encoder,
-                                       pybind11::handle symbols_storage_handle)
+void fulcrum_encoder_set_symbols_storage(
+    encoder_type& encoder, pybind11::handle symbols_storage_handle)
 {
     PyObject* symbols_storage_obj = symbols_storage_handle.ptr();
 
@@ -128,9 +128,9 @@ void block_encoder_set_symbols_storage(encoder_type& encoder,
         (uint8_t*)PyByteArray_AsString(symbols_storage_obj));
 }
 
-void block_encoder_set_symbol_storage(encoder_type& encoder,
-                                      pybind11::handle symbol_storage_handle,
-                                      std::size_t index)
+void fulcrum_encoder_set_symbol_storage(encoder_type& encoder,
+                                        pybind11::handle symbol_storage_handle,
+                                        std::size_t index)
 {
     PyObject* symbol_storage_obj = symbol_storage_handle.ptr();
 
@@ -156,38 +156,49 @@ void block_encoder_set_symbol_storage(encoder_type& encoder,
 void encoder(pybind11::module& m)
 {
     using namespace pybind11;
-    class_<encoder_type>(m, "Encoder", "The Kodo block encoder")
+    class_<encoder_type>(m, "Encoder", "The Kodo fulcrum encoder")
         .def(init<kodo::finite_field>(), arg("field"),
-             "The block encoder constructor\n\n"
+             "The fulcrum encoder constructor\n\n"
              "\t:param field: the chosen finite field.\n")
         .def("configure", &encoder_type::configure, arg("symbols"),
-             arg("symbol_bytes"),
+             arg("symbol_bytes"), arg("expansion"),
              "Configure the encoder with the given parameters. This is also "
              "useful for reusing an existing coder. Note that the "
              "reconfiguration always implies a reset, so the encoder will be"
              "in a clean state after this operation.\n\n"
              "\t:param symbols: The number of symbols.\n"
-             "\t:param symbol_bytes: The size of a symbol in bytes.")
+             "\t:param symbol_bytes: The size of a symbol in bytes.\n"
+             "\t:param expansion: The number of expansion symbols to use.\n")
         .def("reset", &encoder_type::reset, "Reset the state of the encoder.\n")
         .def_property_readonly(
             "symbols", &encoder_type::symbols,
             "Return the number of symbols supported by this encoder.\n")
+        .def_property_readonly("inner_symbols", &encoder_type::inner_symbols,
+                               "Return the number of inner symbols.\n")
         .def_property_readonly(
             "symbol_bytes", &encoder_type::symbol_bytes,
             "Return the size in bytes per symbol supported by this encoder.\n")
         .def_property_readonly("field", &encoder_type::field,
-                               "Return the :class:`~kodo.FiniteField` used.\n")
+                               "Return the :class:`~kodo.FiniteField` used in "
+                               "the encoder.\n")
+        .def_property_readonly("inner_field", &encoder_type::inner_field,
+                               "Return the :class:`~kodo.FiniteField` used in "
+                               "the inner encoder.\n")
+        .def_property_readonly("expansion", &encoder_type::expansion,
+                               "Return the expansion set for this encoder.\n")
         .def_property_readonly("block_bytes", &encoder_type::block_bytes,
                                "Return the total number of bytes that is "
                                "currently being encoded with this encoder.\n")
         .def_property_readonly("rank", &encoder_type::rank,
                                "Return the rank of the encoder.\n")
-        .def("set_symbols_storage", &block_encoder_set_symbols_storage,
+        .def_property_readonly("inner_rank", &encoder_type::inner_rank,
+                               "Return the rank of the inner encoder.\n")
+        .def("set_symbols_storage", &fulcrum_encoder_set_symbols_storage,
              arg("symbols_storage"),
              "Set the symbols to be encoded.\n\n"
              "\t:param symbols_storage: The buffer containing all the data for "
-             "the block.\n")
-        .def("set_symbol_storage", &block_encoder_set_symbol_storage,
+             "the block\n")
+        .def("set_symbol_storage", &fulcrum_encoder_set_symbol_storage,
              arg("symbol_storage"), arg("index"),
              "Set a symbol to be encoded.\n\n"
              "\t:param symbol_storage: The buffer containing all the data for "
@@ -195,24 +206,28 @@ void encoder(pybind11::module& m)
              "\t:param index: The index of the symbol.\n")
         .def("is_symbol_set", &encoder_type::is_symbol_set, arg("index"),
              "Checks if a symbol has been set.\n\n"
+             "Return True if the symbol at index has been set, otherwise "
+             "false.\n"
              "\t:param index: The index of the symbol to check.\n")
-        .def("encode_symbol", &block_encoder_encode_symbol,
-             arg("symbol_storage"), arg("coefficients"),
+        .def("encode_symbol", &fulcrum_encoder_encode_symbol, arg("symbol"),
+             arg("coefficients"),
              "Create a new encoded symbol given the passed encoding "
              "coefficients.\n\n"
-             "\t:param symbol_storage: The buffer containing all the data for "
-             "the block.\n"
+             "\t:param symbol: The bytearray to which the encoded "
+             "symbol will "
+             "be written. Must contain at least symbol_bytes bytes.\n"
              "\t:param coefficients: The coding coefficients.\n")
         .def("encode_systematic_symbol",
-             &block_encoder_encode_systematic_symbol, arg("symbol_storage"),
+             &fulcrum_encoder_encode_systematic_symbol, arg("symbol"),
              arg("index"),
              "Creates a new systematic, i.e, un-coded symbol given the passed "
              "index.\n\n"
-             "\t:param symbol_storage: The buffer containing all the data for "
-             "the block.\n"
+             "\t:param symbol: The bytearray to which the systematic symbol "
+             "will "
+             "be written. Must contain at least symbol_bytes bytes.\n"
              "\t:param index: The index of the systematic symbol to produce.")
         .def(
-            "enable_log", &block_encoder_enable_log, arg("callback"),
+            "enable_log", &fulcrum_encoder_enable_log, arg("callback"),
             "Enable logging for this encoder.\n\n"
             "\t:param callback: The callback used for handling log messages.\n")
         .def("disable_log", &encoder_type::disable_log, "Disables the log.\n")

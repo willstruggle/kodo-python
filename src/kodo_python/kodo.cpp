@@ -31,6 +31,7 @@
 #include "block/generator/parity_2d.hpp"
 #include "block/generator/random_uniform.hpp"
 #include "block/generator/rs_cauchy.hpp"
+#include "block/generator/tunable.hpp"
 
 #include "finite_field.hpp"
 #include "version.hpp"
@@ -45,6 +46,10 @@
 #include "slide/encoder.hpp"
 #include "slide/generator/random_uniform.hpp"
 #include "slide/rate_controller.hpp"
+
+#include "fulcrum/decoder.hpp"
+#include "fulcrum/encoder.hpp"
+#include "fulcrum/generator/random_uniform.hpp"
 namespace kodo_python
 {
 inline namespace STEINWURF_KODO_PYTHON_VERSION
@@ -63,6 +68,7 @@ PYBIND11_MODULE(kodo, m)
     m.attr("__copyright__") = "Steinwurf ApS";
 
     finite_field(m);
+
     auto block = m.def_submodule("block", "Block codec");
     block::encoder(block);
     block::decoder(block);
@@ -72,6 +78,15 @@ PYBIND11_MODULE(kodo, m)
     block::generator::random_uniform(block_generator);
     block::generator::rs_cauchy(block_generator);
     block::generator::parity_2d(block_generator);
+    block::generator::tunable(block_generator);
+
+    auto fulcrum = m.def_submodule("fulcrum", "Fulcrum codec");
+    fulcrum::encoder(fulcrum);
+    fulcrum::decoder(fulcrum);
+
+    auto fulcrum_generator =
+        fulcrum.def_submodule("generator", "Fulcrum codec generators");
+    fulcrum::generator::random_uniform(fulcrum_generator);
 
     auto perpetual = m.def_submodule("perpetual", "Perpetual codec");
     perpetual::encoder(perpetual);

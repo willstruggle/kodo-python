@@ -22,6 +22,16 @@ Block API
    block_generator_random_uniform
    block_generator_rs_cauchy
    block_generator_parity_2d
+   block_generator_tunable
+
+Fulcrum API
+===========
+.. toctree::
+   :maxdepth: 2
+
+   fulcrum_encoder
+   fulcrum_decoder
+   fulcrum_generator_random_uniform
 
 Slide API
 =========
