@@ -8,6 +8,10 @@ Latest
 ------
 * tbd
 
+18.1.0
+------
+* Minor: Added Kodo Fulcrum and the Tunable block generator.
+
 18.0.0
 ------
 * Major: Upgrade to kodo 8.
