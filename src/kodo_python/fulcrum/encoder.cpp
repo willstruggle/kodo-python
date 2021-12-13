@@ -54,7 +54,8 @@ void fulcrum_encoder_enable_log(
 {
     encoder.m_log_callback = callback;
     encoder.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             encoder_type* encoder = static_cast<encoder_type*>(data);
             assert(encoder->m_log_callback);
             encoder->m_log_callback(name, message);

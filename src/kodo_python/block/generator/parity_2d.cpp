@@ -54,7 +54,8 @@ void generator_parity_2d_enable_log(
 {
     generator.m_log_callback = callback;
     generator.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             parity_2d_type* generator = static_cast<parity_2d_type*>(data);
             assert(generator->m_log_callback);
             generator->m_log_callback(name, message);

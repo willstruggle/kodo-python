@@ -59,7 +59,8 @@ void generator_tunable_enable_log(
 {
     generator.m_log_callback = callback;
     generator.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             tunable_type* generator = static_cast<tunable_type*>(data);
             assert(generator->m_log_callback);
             generator->m_log_callback(name, message);

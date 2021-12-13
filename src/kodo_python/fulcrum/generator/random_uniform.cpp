@@ -55,7 +55,8 @@ void generator_random_uniform_enable_log(
 {
     generator.m_log_callback = callback;
     generator.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             random_uniform_type* generator =
                 static_cast<random_uniform_type*>(data);
             assert(generator->m_log_callback);

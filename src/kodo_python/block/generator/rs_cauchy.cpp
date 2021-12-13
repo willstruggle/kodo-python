@@ -58,7 +58,8 @@ void generator_rs_cauchy_enable_log(
 {
     generator.m_log_callback = callback;
     generator.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             rs_cauchy_type* generator = static_cast<rs_cauchy_type*>(data);
             assert(generator->m_log_callback);
             generator->m_log_callback(name, message);

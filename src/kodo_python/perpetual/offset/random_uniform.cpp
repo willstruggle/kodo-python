@@ -53,7 +53,8 @@ void offset_random_uniform_enable_log(
 {
     offset_generator.m_log_callback = callback;
     offset_generator.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             random_uniform_type* offset_generator =
                 static_cast<random_uniform_type*>(data);
             assert(offset_generator->m_log_callback);

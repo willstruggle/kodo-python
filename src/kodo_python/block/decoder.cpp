@@ -44,7 +44,8 @@ void block_decoder_enable_log(
 {
     decoder.m_log_callback = callback;
     decoder.enable_log(
-        [](const std::string& name, const std::string& message, void* data) {
+        [](const std::string& name, const std::string& message, void* data)
+        {
             decoder_type* decoder = static_cast<decoder_type*>(data);
             assert(decoder->m_log_callback);
             decoder->m_log_callback(name, message);
