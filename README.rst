@@ -5,7 +5,7 @@
 kodo-python
 ===========
 
-|CMake| |C++ make-specs| |No Assertions| |Flake8| |Black| |Clang Format| |Cppcheck|
+|CMake| |Linux Waf| |No Assertions| |Flake8| |Black| |Clang Format| |Cppcheck|
 
 .. |CMake| image:: https://github.com/steinwurf/kodo-python/actions/workflows/cmake.yml/badge.svg
    :target: https://github.com/steinwurf/kodo-python/actions/workflows/cmake.yml
