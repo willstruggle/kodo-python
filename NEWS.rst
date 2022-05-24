@@ -6,7 +6,15 @@ every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+19.0.0
+------
 * Major: Upgrade to kodo 13.
+* Major: Changed all encode/decode functionality to use a more pythonic approach.
+    Encode/decode methods no longer take a symbol as argument, but generate and
+    returns a symbol bytearray. The original symbols are given to the state of
+    the encoder/decoder objects.
 * Major: Upgrade to pybind11 version 4.
 * Minor: Added pivot callback function to slide.Decoder (on_symbol_pivot()).
 

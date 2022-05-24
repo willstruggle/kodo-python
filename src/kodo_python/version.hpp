@@ -26,7 +26,7 @@ namespace kodo_python
 {
 /// Here we define the STEINWURF_KODO_PYTHON_VERSION this should be updated
 /// on each release
-#define STEINWURF_KODO_PYTHON_VERSION v18_1_0
+#define STEINWURF_KODO_PYTHON_VERSION v19_0_0
 
 inline namespace STEINWURF_KODO_PYTHON_VERSION
 {
