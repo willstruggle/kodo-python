@@ -49,6 +49,7 @@ struct decoder_wrapper : kodo::slide::decoder
     }
     std::function<void(const std::string&, const std::string&)> m_log_callback;
     std::function<void(uint64_t index)> m_on_symbol_decoded;
+    std::function<void(uint64_t index)> m_on_symbol_pivot;
 
     bool configured = false;
 
@@ -96,6 +97,20 @@ void slide_decoder_on_symbol_decoded(
             decoder_type* decoder = static_cast<decoder_type*>(user_data);
             assert(decoder->m_on_symbol_decoded);
             decoder->m_on_symbol_decoded(index);
+        },
+        &decoder);
+}
+
+void slide_decoder_on_symbol_pivot(
+    decoder_type& decoder, std::function<void(uint64_t index)> on_symbol_pivot)
+{
+    decoder.m_on_symbol_pivot = on_symbol_pivot;
+    decoder.on_symbol_pivot(
+        [](uint64_t index, void* user_data)
+        {
+            decoder_type* decoder = static_cast<decoder_type*>(user_data);
+            assert(decoder->m_on_symbol_pivot);
+            decoder->m_on_symbol_pivot(index);
         },
         &decoder);
 }
@@ -335,6 +350,12 @@ void decoder(pybind11::module& m)
              arg("decoding_callback"),
              "Sets a callback to be executed when a symbol is decoded.\n\n"
              ":param decoding_callback: A function that takes an index and has "
+             "no return value.\n")
+        .def("on_symbol_pivot", &slide_decoder_on_symbol_pivot,
+             arg("pivot_callback"),
+             "Sets a callback to be executed when a symbol is found to be "
+             "pivot.\n\n"
+             ":param pivot_callback: A function that takes an index and has "
              "no return value.\n")
         .def("enable_log", &slide_decoder_enable_log, arg("callback"),
              "Enable logging for this decoder.\n\n"

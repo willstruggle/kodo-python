@@ -8,6 +8,7 @@ Latest
 ------
 * Major: Upgrade to kodo 13.
 * Major: Upgrade to pybind11 version 4.
+* Minor: Added pivot callback function to slide.Decoder (on_symbol_pivot()).
 
 18.1.0
 ------
