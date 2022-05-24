@@ -68,31 +68,22 @@ void generator_tunable_enable_log(
         &generator);
 }
 
-void block_generator_tunable_generate(tunable_type& generator,
-                                      pybind11::handle coefficients_handle,
-                                      float density)
+auto block_generator_tunable_generate(tunable_type& generator, float density)
+    -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
 
-    generator.generate((uint8_t*)PyByteArray_AsString(coefficients_obj),
-                       density);
+    generator.generate(coefficients.data(), density);
+
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
-void block_generator_tunable_generate_partial(
-    tunable_type& generator, pybind11::handle coefficients_handle,
-    std::size_t symbols, float density)
+auto block_generator_tunable_generate_partial(tunable_type& generator,
+                                              std::size_t symbols,
+                                              float density)
+    -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
 
     if (symbols > generator.symbols())
     {
@@ -100,8 +91,11 @@ void block_generator_tunable_generate_partial(
             "symbols: must be less than or equal to tunable.symbols()");
     }
 
-    generator.generate_partial((uint8_t*)PyByteArray_AsString(coefficients_obj),
-                               symbols, density);
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
+
+    generator.generate_partial(coefficients.data(), symbols, density);
+
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
 void tunable(pybind11::module& m)
@@ -125,21 +119,15 @@ void tunable(pybind11::module& m)
         .def_property_readonly(
             "symbols", &tunable_type::symbols,
             "Return the number of symbols supported by this generator.\n")
-        .def("generate", &block_generator_tunable_generate, arg("coefficients"),
-             arg("density"),
+        .def("generate", &block_generator_tunable_generate, arg("density"),
              "Generates the coefficients.\n\n"
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be stored.\n"
              "\t:param density: A value between 1.0 and 0.0 which determines "
              "the density of the generated coefficients. The number of "
              "coefficients generated is calculated like so: max(1, "
              "symbols*density).\n")
         .def("generate_partial", &block_generator_tunable_generate_partial,
-             arg("coefficients"), arg("symbols"), arg("density"),
+             arg("symbols"), arg("density"),
              "Partially generate the coefficients.\n\n"
-             "\t:param coefficients: The data buffer where the "
-             "coefficients "
-             "will be stored.\n"
              "\t:param symbols: The number of symbols to "
              "generate coefficients "
              "for. Must be less than or equal to "
@@ -154,10 +142,6 @@ void tunable(pybind11::module& m)
              "given seed.\n\n"
              "\t:param seed: The seed that will set the state of the "
              "generator.\n")
-        .def_property_readonly("max_coefficients_bytes",
-                               &tunable_type::max_coefficients_bytes,
-                               "Return the maximum number of bytes to be "
-                               "generated when calling generate.\n")
         .def(
             "enable_log", &generator_tunable_enable_log, arg("callback"),
             "Enable logging for this generator.\n\n"

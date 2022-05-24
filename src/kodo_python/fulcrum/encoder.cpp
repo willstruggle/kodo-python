@@ -63,83 +63,49 @@ void fulcrum_encoder_enable_log(
         &encoder);
 }
 
-void fulcrum_encoder_encode_symbol(encoder_type& encoder,
-                                   pybind11::handle symbol_handle,
-                                   pybind11::handle coefficients_handle)
+auto fulcrum_encoder_encode_symbol(encoder_type& encoder,
+                                   pybind11::bytearray coefficients)
+    -> pybind11::bytearray
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-    PyObject* coefficients_obj = coefficients_handle.ptr();
+    std::vector<uint8_t> symbol(encoder.symbol_bytes());
 
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) < encoder.symbol_bytes())
-    {
-        throw pybind11::value_error(
-            "symbol: not large enough to contain symbol");
-    }
-
-    encoder.encode_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
-                          (uint8_t*)PyByteArray_AsString(coefficients_obj));
+    encoder.encode_symbol(symbol.data(),
+                          (uint8_t*)PyByteArray_AsString(coefficients.ptr()));
+    return pybind11::bytearray{(char*)symbol.data(), symbol.size()};
 }
 
-void fulcrum_encoder_encode_systematic_symbol(encoder_type& encoder,
-                                              pybind11::handle storage_handle,
+auto fulcrum_encoder_encode_systematic_symbol(encoder_type& encoder,
                                               std::size_t index)
+    -> pybind11::bytearray
 {
-    PyObject* symbol_obj = storage_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
     if (index >= encoder.symbols())
     {
         throw pybind11::value_error("index: must be less than symbols");
     }
 
-    encoder.encode_systematic_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
-                                     index);
+    std::vector<uint8_t> symbol(encoder.symbol_bytes());
+
+    encoder.encode_systematic_symbol(symbol.data(), index);
+
+    return pybind11::bytearray{(char*)symbol.data(), symbol.size()};
 }
 
-void fulcrum_encoder_set_symbols_storage(
-    encoder_type& encoder, pybind11::handle symbols_storage_handle)
+void fulcrum_encoder_set_symbols_storage(encoder_type& encoder,
+                                         pybind11::bytearray symbols_storage)
 {
-    PyObject* symbols_storage_obj = symbols_storage_handle.ptr();
-
-    if (!PyByteArray_Check(symbols_storage_obj))
-    {
-        throw pybind11::type_error("symbols_storage: expected type bytearray");
-    }
-
     if (encoder.rank() != 0)
     {
         throw std::runtime_error("symbol storage must only be set once");
     }
 
     encoder.set_symbols_storage(
-        (uint8_t*)PyByteArray_AsString(symbols_storage_obj));
+        (uint8_t*)PyByteArray_AsString(symbols_storage.ptr()));
 }
 
 void fulcrum_encoder_set_symbol_storage(encoder_type& encoder,
-                                        pybind11::handle symbol_storage_handle,
+                                        pybind11::bytearray symbol_storage,
                                         std::size_t index)
 {
-    PyObject* symbol_storage_obj = symbol_storage_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_storage_obj))
-    {
-        throw pybind11::type_error("symbol_storage: expected type bytearray");
-    }
-
     if (index >= encoder.symbols())
     {
         throw pybind11::value_error("index: must be less than symbols");
@@ -151,7 +117,7 @@ void fulcrum_encoder_set_symbol_storage(encoder_type& encoder,
     }
 
     encoder.set_symbol_storage(
-        (uint8_t*)PyByteArray_AsString(symbol_storage_obj), index);
+        (uint8_t*)PyByteArray_AsString(symbol_storage.ptr()), index);
 }
 
 void encoder(pybind11::module& m)
@@ -210,22 +176,15 @@ void encoder(pybind11::module& m)
              "Return True if the symbol at index has been set, otherwise "
              "false.\n"
              "\t:param index: The index of the symbol to check.\n")
-        .def("encode_symbol", &fulcrum_encoder_encode_symbol, arg("symbol"),
+        .def("encode_symbol", &fulcrum_encoder_encode_symbol,
              arg("coefficients"),
              "Create a new encoded symbol given the passed encoding "
              "coefficients.\n\n"
-             "\t:param symbol: The bytearray to which the encoded "
-             "symbol will "
-             "be written. Must contain at least symbol_bytes bytes.\n"
              "\t:param coefficients: The coding coefficients.\n")
         .def("encode_systematic_symbol",
-             &fulcrum_encoder_encode_systematic_symbol, arg("symbol"),
-             arg("index"),
+             &fulcrum_encoder_encode_systematic_symbol, arg("index"),
              "Creates a new systematic, i.e, un-coded symbol given the passed "
              "index.\n\n"
-             "\t:param symbol: The bytearray to which the systematic symbol "
-             "will "
-             "be written. Must contain at least symbol_bytes bytes.\n"
              "\t:param index: The index of the systematic symbol to produce.")
         .def(
             "enable_log", &fulcrum_encoder_enable_log, arg("callback"),

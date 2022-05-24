@@ -103,8 +103,6 @@ def main():
 
     address = (args.ip, args.port)
 
-    symbol = bytearray(encoder.symbol_bytes)
-
     header_data = bytearray(27)
 
     print("Processing...")
@@ -118,7 +116,7 @@ def main():
         offset = offset_generator.offset()
         coefficients = generator.generate(seed)
 
-        encoder.encode_symbol(symbol, coefficients, offset)
+        symbol = encoder.encode_symbol(coefficients, offset)
 
         struct.pack_into(
             "<QQBIIH",

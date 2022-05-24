@@ -72,16 +72,14 @@ def main():
     data_in = bytearray(os.urandom(encoder.block_bytes))
     encoder.set_symbols_storage(data_in)
 
+    coefficients = None
+
     # Define the data_out bytearrays where the symbols should be decoded
     # These bytearrays must not go out of scope while the encoder exists!
     data_out1 = bytearray(recoder.block_bytes)
     data_out2 = bytearray(decoder.block_bytes)
     recoder.set_symbols_storage(data_out1)
     decoder.set_symbols_storage(data_out2)
-
-    symbol = bytearray(encoder.symbol_bytes)
-    coefficients = bytearray(generator.max_coefficients_bytes)
-    recoding_coefficients = bytearray(generator.max_coefficients_bytes)
 
     loss_probability = 25
     systematic_index = 0
@@ -93,7 +91,7 @@ def main():
 
             index = systematic_index
             systematic_index += 1
-            encoder.encode_systematic_symbol(symbol, index)
+            symbol = encoder.encode_systematic_symbol(index)
 
             # Drop packet based on loss probability
             if random.randint(0, 100) < loss_probability:
@@ -108,10 +106,10 @@ def main():
             print("coded symbol", end="")
 
             # Generate the coefficients into the symbol buffer
-            generator.generate(coefficients)
+            coefficients = generator.generate()
 
             # Encode a symbol into the symbol buffer
-            encoder.encode_symbol(symbol, coefficients)
+            symbol = encoder.encode_symbol(coefficients)
 
             # Drop packet based on loss probability
             if random.randint(0, 100) < loss_probability:
@@ -124,9 +122,9 @@ def main():
                 recoder.decode_symbol(symbol, coefficients)
                 print(f" - decoded, rank now {recoder.rank}")
 
-        if recoder.rank != 0:
+        if recoder.rank != 0 and coefficients:
             print("recoded symbol", end="")
-            generator.generate_recode(recoding_coefficients, recoder)
+            recoding_coefficients = generator.generate_recode(recoder)
             recoder.recode_symbol(symbol, coefficients, recoding_coefficients)
 
             if random.randint(0, 100) < loss_probability:

@@ -68,32 +68,18 @@ void perpetual_decoder_enable_log(
         &decoder);
 }
 
-void perpetual_decoder_set_symbols_storage(
-    decoder_type& decoder, pybind11::handle symbols_storage_handle)
+void perpetual_decoder_set_symbols_storage(decoder_type& decoder,
+                                           pybind11::bytearray symbols_storage)
 {
-    PyObject* symbols_storage_obj = symbols_storage_handle.ptr();
-
-    if (!PyByteArray_Check(symbols_storage_obj))
-    {
-        throw pybind11::type_error("symbols_storage: expected type bytearray");
-    }
-
     decoder.set_symbols_storage(
-        (uint8_t*)PyByteArray_AsString(symbols_storage_obj));
+        (uint8_t*)PyByteArray_AsString(symbols_storage.ptr()));
 }
 
 void perpetual_decoder_decode_symbol(decoder_type& decoder,
-                                     pybind11::handle symbol_handle,
+                                     pybind11::bytearray symbol,
                                      uint64_t coefficients, std::size_t offset)
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) < decoder.symbol_bytes())
+    if (symbol.size() < decoder.symbol_bytes())
     {
         throw pybind11::value_error(
             "symbol: not large enough to contain symbol");
@@ -104,7 +90,7 @@ void perpetual_decoder_decode_symbol(decoder_type& decoder,
         throw pybind11::value_error("offset: must be less than symbols");
     }
 
-    decoder.decode_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
+    decoder.decode_symbol((uint8_t*)PyByteArray_AsString(symbol.ptr()),
                           coefficients, offset);
 }
 

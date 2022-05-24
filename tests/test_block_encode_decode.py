@@ -62,11 +62,6 @@ class TestBlockEncodeDecode(unittest.TestCase):
         self.assertEqual(symbols, generator.symbols)
         generator.set_seed(0)
 
-        symbol = bytearray(encoder.symbol_bytes)
-        self.assertEqual(len(symbol), encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
-        self.assertEqual(len(coefficients), generator.max_coefficients_bytes)
-
         data_in = bytearray(os.urandom(encoder.block_bytes))
         encoder.set_symbols_storage(data_in)
 
@@ -78,8 +73,10 @@ class TestBlockEncodeDecode(unittest.TestCase):
         loss_probability = 10
 
         iterations = symbols * 2
+
         while not decoder.is_complete():
             iterations -= 1
+
             self.assertNotEqual(0, iterations)
 
             if encoder.rank > systematic_index:
@@ -87,22 +84,21 @@ class TestBlockEncodeDecode(unittest.TestCase):
                 old_rank = decoder.rank
                 index = systematic_index
                 systematic_index += 1
-                encoder.encode_systematic_symbol(symbol, index)
+                symbol = encoder.encode_systematic_symbol(index)
 
                 if random.randint(0, 100) < loss_probability:
 
                     continue
 
                 else:
-
                     decoder.decode_systematic_symbol(symbol, index)
                     self.assertNotEqual(old_rank, decoder.rank)
 
             else:
 
                 old_rank = decoder.rank
-                generator.generate(coefficients)
-                encoder.encode_symbol(symbol, coefficients)
+                coefficients = generator.generate()
+                symbol = encoder.encode_symbol(coefficients)
 
                 if random.randint(0, 100) < loss_probability:
 
@@ -152,8 +148,6 @@ class TestBlockEncodeDecode(unittest.TestCase):
 
         symbol = bytearray(encoder.symbol_bytes)
         self.assertEqual(len(symbol), encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
-        self.assertEqual(len(coefficients), generator.max_coefficients_bytes)
 
         data_in = bytearray(os.urandom(encoder.block_bytes))
         encoder.set_symbols_storage(data_in)
@@ -171,7 +165,7 @@ class TestBlockEncodeDecode(unittest.TestCase):
                 old_rank = decoder.rank
                 index = systematic_index
                 systematic_index += 1
-                encoder.encode_systematic_symbol(symbol, index)
+                symbol = encoder.encode_systematic_symbol(index)
 
                 if random.randint(0, 100) < loss_probability:
                     continue
@@ -183,13 +177,13 @@ class TestBlockEncodeDecode(unittest.TestCase):
             elif generator.remaining_repair_symbols != 0:
 
                 old_rank = decoder.rank
-                index = generator.generate(coefficients)
-                encoder.encode_symbol(symbol, coefficients)
+                coefficients, index = generator.generate()
+                symbol = encoder.encode_symbol(coefficients)
 
                 if random.randint(0, 100) < loss_probability:
                     continue
                 else:
-                    generator.generate_specific(coefficients, index)
+                    coefficients = generator.generate_specific(index)
                     decoder.decode_symbol(symbol, coefficients)
             else:
                 # The decoding didn't no more repair.
@@ -224,8 +218,6 @@ class TestBlockEncodeDecode(unittest.TestCase):
 
         symbol = bytearray(encoder.symbol_bytes)
         self.assertEqual(len(symbol), encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
-        self.assertEqual(len(coefficients), generator.max_coefficients_bytes)
 
         data_in = bytearray(os.urandom(encoder.block_bytes))
         encoder.set_symbols_storage(data_in)
@@ -244,16 +236,16 @@ class TestBlockEncodeDecode(unittest.TestCase):
 
             if generator.can_generate():
 
-                index = generator.generate(coefficients)
-                encoder.encode_symbol(symbol, coefficients)
+                coefficients, index = generator.generate()
+                symbol = encoder.encode_symbol(coefficients)
                 if random.randint(0, 100) >= loss_probability:
-                    generator.generate_specific(coefficients, index)
+                    coefficients = generator.generate_specific(index)
                     decoder.decode_symbol(symbol, coefficients)
             else:
                 if systematic_index == symbols:
                     systematic_index = 0
 
-                encoder.encode_systematic_symbol(symbol, systematic_index)
+                symbol = encoder.encode_systematic_symbol(systematic_index)
                 if random.randint(0, 100) >= loss_probability:
                     decoder.decode_systematic_symbol(symbol, systematic_index)
                 systematic_index += 1

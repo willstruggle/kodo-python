@@ -63,11 +63,6 @@ class TestFulcrumEncodeDecode(unittest.TestCase):
         self.assertEqual(symbols, generator.symbols)
         generator.set_seed(0)
 
-        symbol = bytearray(encoder.symbol_bytes)
-        self.assertEqual(len(symbol), encoder.symbol_bytes)
-        coefficients = bytearray(generator.max_coefficients_bytes)
-        self.assertEqual(len(coefficients), generator.max_coefficients_bytes)
-
         data_in = bytearray(os.urandom(encoder.block_bytes))
         encoder.set_symbols_storage(data_in)
 
@@ -88,7 +83,7 @@ class TestFulcrumEncodeDecode(unittest.TestCase):
                 old_rank = decoder.rank
                 index = systematic_index
                 systematic_index += 1
-                encoder.encode_systematic_symbol(symbol, index)
+                symbol = encoder.encode_systematic_symbol(index)
 
                 if random.randint(0, 100) < loss_probability:
 
@@ -102,8 +97,8 @@ class TestFulcrumEncodeDecode(unittest.TestCase):
             else:
 
                 old_rank = decoder.rank
-                generator.generate(coefficients)
-                encoder.encode_symbol(symbol, coefficients)
+                coefficients = generator.generate()
+                symbol = encoder.encode_symbol(coefficients)
 
                 if random.randint(0, 100) < loss_probability:
 

@@ -65,53 +65,40 @@ void generator_random_uniform_enable_log(
         &generator);
 }
 
-void fulcrum_generator_random_uniform_generate(
-    random_uniform_type& generator, pybind11::handle coefficients_handle)
+auto fulcrum_generator_random_uniform_generate(random_uniform_type& generator)
+    -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
 
-    generator.generate((uint8_t*)PyByteArray_AsString(coefficients_obj));
+    generator.generate(coefficients.data());
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
-void fulcrum_generator_random_uniform_generate_partial(
-    random_uniform_type& generator, pybind11::handle coefficients_handle,
-    std::size_t symbols)
+auto fulcrum_generator_random_uniform_generate_partial(
+    random_uniform_type& generator, std::size_t symbols) -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
-
     if (symbols > generator.symbols())
     {
         throw pybind11::value_error(
             "symbols: must be less than or equal to random_uniform.symbols()");
     }
 
-    generator.generate_partial((uint8_t*)PyByteArray_AsString(coefficients_obj),
-                               symbols);
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
+
+    generator.generate_partial(coefficients.data(), symbols);
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
-void fulcrum_generator_random_uniform_generate_recode(
-    random_uniform_type& generator, pybind11::handle coefficients_handle,
-    const kodo_python::fulcrum::decoder_type& decoder)
+auto fulcrum_generator_random_uniform_generate_recode(
+    random_uniform_type& generator,
+    const kodo_python::fulcrum::decoder_type& decoder) -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
+    generator.generate_recode(coefficients.data(), decoder);
 
-    generator.generate_recode((uint8_t*)PyByteArray_AsString(coefficients_obj),
-                              decoder);
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
 void random_uniform(pybind11::module& m)
@@ -137,28 +124,18 @@ void random_uniform(pybind11::module& m)
             "symbols", &random_uniform_type::symbols,
             "Return the number of symbols supported by this generator.\n")
         .def("generate", &fulcrum_generator_random_uniform_generate,
-             arg("coefficients"),
-             "Generates the coefficients.\n\n"
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be stored.\n")
+             "Returns the coefficients.\n")
         .def("generate_partial",
-             &fulcrum_generator_random_uniform_generate_partial,
-             arg("coefficients"), arg("symbols"),
+             &fulcrum_generator_random_uniform_generate_partial, arg("symbols"),
              "Partially generate the coefficients.\n\n"
-             "\t:param coefficients: The data buffer where the "
-             "coefficients "
-             "will be stored.\n"
              "\t:param symbols: The number of symbols to "
              "generate coefficients "
              "for.\n"
              "\t\t Must be less than or equal to "
              "random_uniform.symbols().\n")
         .def("generate_recode",
-             &fulcrum_generator_random_uniform_generate_recode,
-             arg("coefficients"), arg("decoder"),
+             &fulcrum_generator_random_uniform_generate_recode, arg("decoder"),
              "Generate coefficients based on the decoder state.\n\n"
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be stored.\n"
              "\t:param decoder: The decoder to query for the current symbol "
              "state.\n")
         .def("set_seed", &random_uniform_type::set_seed, arg("seed"),
@@ -167,10 +144,6 @@ void random_uniform(pybind11::module& m)
              "given seed.\n\n"
              "\t:param seed: The seed that will set the state of the "
              "generator.\n")
-        .def_property_readonly("max_coefficients_bytes",
-                               &random_uniform_type::max_coefficients_bytes,
-                               "Return the maximum number of bytes to be "
-                               "generated when calling generate.\n")
         .def(
             "enable_log", &generator_random_uniform_enable_log, arg("callback"),
             "Enable logging for this generator.\n\n"

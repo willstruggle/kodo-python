@@ -24,67 +24,54 @@ import kodo
 
 def main():
 
-    symbol_bytes = 1400
+    max_symbol_bytes = 1400
     encoder_capacity = 20
     decoder_capacity = 40
 
     field = kodo.FiniteField.binary8
 
     encoder = kodo.slide.Encoder(field)
-    encoder.configure(symbol_bytes)
+    encoder.configure(max_symbol_bytes)
 
     decoder = kodo.slide.Decoder(field)
-    decoder.configure(symbol_bytes)
+    decoder.configure(max_symbol_bytes)
 
     generator = kodo.slide.generator.RandomUniform(field)
-
-    symbol = bytearray(encoder.symbol_bytes)
 
     rate = kodo.slide.RateController(n=10, k=4)
 
     # Keeping track of decoded symbols
     decoded = []
 
+    decoder.on_symbol_decoded(lambda index: decoded.append(index))
+
     # Lose packets with 10% probability
     loss_probability = 10
+
+    index = 0
 
     for _ in range(1000):
         # Manage the encoder's window
         repair = rate.send_repair()
         if repair:
             # Encode a symbol
-            encoder.set_window(encoder.stream_lower_bound, encoder.stream_symbols)
-
-            # Set the seed used to generate the coding coefficients and
-            # encode the symbol
-            coefficients = bytearray(
-                generator.coefficients_bytes(
-                    encoder.window_lower_bound, encoder.window_symbols
-                )
-            )
+            window = encoder.stream_range
 
             # Choose a seed for this encoding
             seed = random.randint(0, 100000)
             generator.set_seed(seed)
-            generator.generate(
-                coefficients, encoder.window_lower_bound, encoder.window_symbols
-            )
-            encoder.encode_symbol(symbol, coefficients)
+            coefficients = generator.generate(window)
+            symbol = encoder.encode_symbol(window, coefficients)
 
-            print(
-                f"coded symbol ({encoder.window_lower_bound}->{encoder.window_upper_bound})",
-                end="",
-            )
+            print(f"coded symbol {window}")
         else:
             # If window is full - pop a symbol before pushing a new one
             if encoder.stream_symbols == encoder_capacity:
-                encoder.pop_back_symbol()
+                encoder.pop_symbol()
 
             # Create a new source symbol and add it to the encoder
-            index = encoder.push_front_symbol(
-                bytearray(os.urandom(encoder.symbol_bytes))
-            )
-            encoder.encode_systematic_symbol(symbol, index)
+            encoder.push_symbol(bytearray(os.urandom(encoder.max_symbol_bytes)))
+            symbol = encoder.encode_systematic_symbol(index)
             print(f"systematic symbol {index}", end="")
 
         # Update loop state
@@ -114,27 +101,19 @@ def main():
         while decoder.stream_upper_bound < encoder.stream_upper_bound:
             if decoder.stream_symbols >= decoder_capacity:
                 # Remove the "oldest" symbol
-                decoder.pop_back_symbol()
-            decoder.push_front_symbol(bytearray(decoder.symbol_bytes))
+                decoder.pop_symbol()
+            decoder.push_symbol()
 
         if repair:
-            # Consume the encoded symbol
-            decoder.set_window(encoder.window_lower_bound, encoder.window_symbols)
 
             # Set the seed and window on the generator
             generator.set_seed(seed)
-            coefficients = bytearray(
-                generator.coefficients_bytes(
-                    decoder.window_lower_bound, decoder.window_symbols
-                )
-            )
-            generator.generate(
-                coefficients, decoder.window_lower_bound, decoder.window_symbols
-            )
+            coefficients = generator.generate(window)
 
-            decoder.decode_symbol(symbol, coefficients)
+            decoder.decode_symbol(symbol, window, coefficients)
         else:
             decoder.decode_systematic_symbol(symbol, index)
+            index += 1
 
         # New symbols may now be decoded.
         for i in range(decoder.stream_symbols):
@@ -150,8 +129,8 @@ def main():
             if decoder.in_stream(index) and encoder.in_stream(index):
                 # If symbol is available on both the encoder and decoder,
                 # check that they do indeed contain the same data.
-                data_out = decoder.symbol_at(index)
-                data_in = encoder.symbol_at(index)
+                data_out = decoder.symbol_data(index)
+                data_in = encoder.symbol_data(index)
 
                 if data_in == data_out:
                     print(f" decoded {index}!")

@@ -54,9 +54,6 @@ def main():
     # Allocate some storage for a symbol.
     symbol = bytearray(encoder.symbol_bytes)
 
-    # Allocate some storage for the coefficients.
-    coefficients = bytearray(generator.max_coefficients_bytes)
-
     # Allocate some data to encode. In this case we make a buffer
     # with the same size as the encoder's block size (the max.
     # amount a single encoder can encode)
@@ -83,7 +80,7 @@ def main():
             print("systematic symbol", end="")
             index = systematic_index
             systematic_index += 1
-            encoder.encode_systematic_symbol(symbol, index)
+            symbol = encoder.encode_systematic_symbol(index)
 
             # Drop packet based on loss probability
             if random.randint(0, 100) < loss_probability:
@@ -94,8 +91,8 @@ def main():
 
         else:
             print("coded symbol", end="")
-            generator.generate(coefficients)
-            encoder.encode_symbol(symbol, coefficients)
+            coefficients = generator.generate()
+            symbol = encoder.encode_symbol(coefficients)
 
             # Drop packet based on loss probability
             if random.randint(0, 100) < loss_probability:

@@ -21,6 +21,7 @@
 #include "random_uniform.hpp"
 
 #include "../../version.hpp"
+#include "../tuple_to_range.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -67,19 +68,15 @@ void slide_generator_random_uniform_enable_log(
         &generator);
 }
 
-void slide_generator_random_uniform_generate(
-    random_uniform_type& generator, pybind11::handle coefficients_handle,
-    std::size_t lower_bound, std::size_t symbols)
+auto slide_generator_random_uniform_generate(random_uniform_type& generator,
+                                             pybind11::tuple range_tuple)
+    -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
+    auto range = py_tuple_to_range(range_tuple);
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
-
-    generator.generate((uint8_t*)PyByteArray_AsString(coefficients_obj),
-                       lower_bound, symbols);
+    std::vector<uint8_t> coefficients(generator.coefficients_bytes(range));
+    generator.generate(coefficients.data(), range);
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
 void random_uniform(pybind11::module& m)
@@ -93,22 +90,14 @@ void random_uniform(pybind11::module& m)
         .def_property_readonly("field", &random_uniform_type::field,
                                "Return the configured finite field.\n")
         .def("generate", &slide_generator_random_uniform_generate,
-             arg("coefficients"), arg("lower_bound"), arg("symbols"),
-             "Generates the coefficients.\n\n"
-             ":param coefficients: The data buffer where the coefficients will "
-             "be written.\n"
-             ":param lower_bound: The lower bound of the coder's window.\n"
-             ":param symbols: The number of symbols in the coder's window.\n")
+             arg("window"),
+             "Returns the coefficients.\n\n"
+             ":param window: A tuple of size 2 containing the lower_bound and "
+             "upper_bound of the coding window.\n")
         .def("set_seed", &random_uniform_type::set_seed, arg("seed"),
              "Sets the state of the coefficient generator. The coefficient "
              "generator will always produce the same set of coefficients for a "
              "given seed.\n")
-        .def("coefficients_bytes", &random_uniform_type::coefficients_bytes,
-             arg("lower_bound"), arg("symbols"),
-             "Return the number of bytes to be generated when calling generate "
-             "next time.\n\n"
-             ":param lower_bound: The lower bound of the coder's window.\n"
-             ":param symbols: The number of symbols in the coder's window.\n")
         .def("enable_log", &slide_generator_random_uniform_enable_log,
              "Enables the log.\n\n"
              ":param callback: The callback which handles the log message.\n")

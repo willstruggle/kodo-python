@@ -1,4 +1,4 @@
-name: Linux C++ make-specs
+name: Linux Waf
 on:
   workflow_dispatch:
     inputs:

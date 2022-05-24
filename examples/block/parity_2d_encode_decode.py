@@ -51,12 +51,6 @@ def main():
     encoder.configure(symbols, symbol_bytes)
     decoder.configure(symbols, symbol_bytes)
 
-    # Allocate some storage for a symbol.
-    symbol = bytearray(encoder.symbol_bytes)
-
-    # Allocate some storage for the coefficients.
-    coefficients = bytearray(generator.max_coefficients_bytes)
-
     # Allocate some data to encode. In this case we make a buffer
     # with the same size as the encoder's block size (the max.
     # amount a single encoder can encode)
@@ -82,10 +76,10 @@ def main():
             print("coded symbol", end="")
 
             # Generate the coefficients into the buffer
-            index = generator.generate(coefficients)
+            coefficients, index = generator.generate()
 
             # Encode a symbol into the symbol buffer
-            encoder.encode_symbol(symbol, coefficients)
+            symbol = encoder.encode_symbol(coefficients)
 
             # Lose a packet with based on loss probability
             if random.randint(0, 100) < loss_probability:
@@ -96,7 +90,7 @@ def main():
                 # feasible to transmit the coefficients. In this case the
                 # generator index can be used for generating the coefficients
                 # again.
-                generator.generate_specific(coefficients, index)
+                coefficients = generator.generate_specific(index)
                 decoder.decode_symbol(symbol, coefficients)
                 print(f" - decoded rank now {decoder.rank}")
 
@@ -107,7 +101,7 @@ def main():
                 systematic_index = 0
 
             # Encode a systematic symbol into the symbol buffer
-            encoder.encode_systematic_symbol(symbol, systematic_index)
+            symbol = encoder.encode_systematic_symbol(systematic_index)
 
             # Lose a packet with based on loss probability
             if random.randint(0, 100) < loss_probability:

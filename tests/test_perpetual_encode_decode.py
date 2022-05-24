@@ -57,8 +57,6 @@ class TestPerpetualEncodeDecode(unittest.TestCase):
 
         offset_generator.configure(encoder.symbols)
 
-        symbol = bytearray(encoder.symbol_bytes)
-
         data_in = bytearray(os.urandom(encoder.block_bytes))
         encoder.set_symbols_storage(data_in)
 
@@ -72,7 +70,7 @@ class TestPerpetualEncodeDecode(unittest.TestCase):
 
             coefficients = generator.generate(seed)
 
-            encoder.encode_symbol(symbol, coefficients, offset)
+            symbol = encoder.encode_symbol(coefficients, offset)
 
             decoder.decode_symbol(symbol, coefficients, offset)
 

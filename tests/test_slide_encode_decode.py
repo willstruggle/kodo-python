@@ -40,60 +40,53 @@ class TestSlideEncodeDecode(unittest.TestCase):
 
     def slide_encode_decode_simple(self, field):
 
-        symbol_bytes = 1400
+        max_symbol_bytes = 1400
         window_symbols = 20
         decoder_capacity = 40
-        symbols = 6
-        loss = 0.5
 
         encoder = kodo.slide.Encoder(field)
         self.assertEqual(field, encoder.field)
 
-        encoder.configure(symbol_bytes)
-        self.assertEqual(symbol_bytes, encoder.symbol_bytes)
+        encoder.configure(max_symbol_bytes)
+        self.assertEqual(max_symbol_bytes, encoder.max_symbol_bytes)
 
         decoder = kodo.slide.Decoder(field)
         self.assertEqual(field, decoder.field)
 
-        decoder.configure(symbol_bytes)
-        self.assertEqual(symbol_bytes, decoder.symbol_bytes)
+        decoder.configure(max_symbol_bytes)
+        self.assertEqual(max_symbol_bytes, decoder.max_symbol_bytes)
 
         rate = kodo.slide.RateController(10, 1)
 
         generator = kodo.slide.generator.RandomUniform(field)
         self.assertEqual(field, generator.field)
 
-        symbol = bytearray(encoder.symbol_bytes)
-        coefficients = None  # must be set after set_window on generator
         max_iterations = 1000
         iterations = 0
 
         decoded = []
-        loss_probability = 10
+
+        def on_symbol_decoded(index):
+            decoded.append(index)
+
+        decoder.on_symbol_decoded(on_symbol_decoded)
+        loss_probability = 2
 
         while iterations < max_iterations:
-            iterations += 1
+
             repair = rate.send_repair()
-            if repair:
-                encoder.set_window(encoder.stream_lower_bound, encoder.stream_symbols)
-                seed = random.randint(0, 100000)
-                generator.set_seed(seed)
-                coefficients = bytearray(
-                    generator.coefficients_bytes(
-                        encoder.window_lower_bound, encoder.window_symbols
-                    )
-                )
-                generator.generate(
-                    coefficients, encoder.window_lower_bound, encoder.window_symbols
-                )
-                encoder.encode_symbol(symbol, coefficients)
-            else:
-                if encoder.window_symbols == window_symbols:
-                    encoder.pop_back_symbol()
-                index = encoder.push_front_symbol(
-                    bytearray(os.urandom(encoder.symbol_bytes))
-                )
-                encoder.encode_systematic_symbol(symbol, index)
+            if not repair:
+                if encoder.stream_symbols == window_symbols:
+                    encoder.pop_symbol()
+                encoder.push_symbol(bytearray(os.urandom(encoder.max_symbol_bytes)))
+
+            window = encoder.stream_range
+
+            generator.set_seed(iterations)
+
+            coefficients = generator.generate(window)
+
+            coded_symbol = encoder.encode_symbol(window, coefficients)
 
             rate.advance()
 
@@ -101,37 +94,16 @@ class TestSlideEncodeDecode(unittest.TestCase):
                 continue
 
             while decoder.stream_upper_bound < encoder.stream_upper_bound:
-                if decoder.stream_symbols >= decoder_capacity:
-                    decoder.pop_back_symbol()
-                decoder.push_front_symbol(bytearray(decoder.symbol_bytes))
+                if decoder.stream_symbols == decoder_capacity:
+                    decoder.pop_symbol()
+                decoder.push_symbol()
 
-            if repair:
-                decoder.set_window(encoder.window_lower_bound, encoder.window_symbols)
-                generator.set_seed(seed)
-                coefficients = bytearray(
-                    generator.coefficients_bytes(
-                        decoder.window_lower_bound, decoder.window_symbols
-                    )
-                )
-                generator.generate(
-                    coefficients, decoder.window_lower_bound, decoder.window_symbols
-                )
-                decoder.decode_symbol(symbol, coefficients)
-            else:
-                decoder.decode_systematic_symbol(symbol, index)
+            generator.set_seed(iterations)
+            coefficients = generator.generate(window)
 
-            for i in range(decoder.stream_symbols):
+            decoded_symbol = decoder.decode_symbol(coded_symbol, window, coefficients)
 
-                index = i + decoder.stream_lower_bound
-                if not decoder.is_symbol_decoded(index):
-                    continue
-                if index in decoded:
-                    continue
-                decoded.append(index)
-                if decoder.in_stream(index) and encoder.in_stream(index):
-                    data_out = decoder.symbol_at(index)
-                    data_in = encoder.symbol_at(index)
-                    self.assertEqual(data_in, data_out)
+            iterations += 1
 
 
 if __name__ == "__main__":

@@ -67,44 +67,28 @@ void perpetual_encoder_enable_log(
         &encoder);
 }
 
-void perpetual_encoder_set_symbols_storage(
-    encoder_type& encoder, pybind11::handle symbols_storage_handle)
+void perpetual_encoder_set_symbols_storage(encoder_type& encoder,
+                                           pybind11::bytearray symbols_storage)
 {
-    PyObject* symbols_storage_obj = symbols_storage_handle.ptr();
-
-    if (!PyByteArray_Check(symbols_storage_obj))
-    {
-        throw pybind11::type_error("symbols_storage: expected type bytearray");
-    }
-
     encoder.set_symbols_storage(
-        (uint8_t*)PyByteArray_AsString(symbols_storage_obj));
+        (uint8_t*)PyByteArray_AsString(symbols_storage.ptr()));
 }
 
-void perpetual_encoder_encode_symbol(encoder_type& encoder,
-                                     pybind11::handle symbol_handle,
+auto perpetual_encoder_encode_symbol(encoder_type& encoder,
                                      uint64_t coefficients, std::size_t offset)
+    -> pybind11::bytearray
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) < encoder.symbol_bytes())
-    {
-        throw pybind11::value_error(
-            "symbol: not large enough to contain symbol");
-    }
 
     if (offset >= encoder.symbols())
     {
         throw pybind11::value_error("offset: must be less than symbols");
     }
 
-    encoder.encode_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
-                          coefficients, offset);
+    std::vector<uint8_t> symbol(encoder.symbol_bytes());
+
+    encoder.encode_symbol(symbol.data(), coefficients, offset);
+
+    return pybind11::bytearray{(char*)symbol.data(), symbol.size()};
 }
 
 void encoder(pybind11::module& m)
@@ -170,12 +154,9 @@ void encoder(pybind11::module& m)
         .def("symbols_storage", &encoder_type::symbols_storage,
              "Return the memory of the block.\n")
         .def("encode_symbol", &perpetual_encoder_encode_symbol,
-             arg("symbol_storage"), arg("coefficients"), arg("offset"),
+             arg("coefficients"), arg("offset"),
              "Creates a new encoded symbol given the passed encoding "
              "coefficients.\n\n"
-             "\t:param symbol_storage: This is the memory where the encoded "
-             "symbol will be produced. This buffer must be large enough to "
-             "store Encoder.symbol_bytes bytes.\n"
              "\t:param coefficients: These are the coding coefficients.\n"
              "\t:param offset: The offset of the coding coefficients.\n")
         .def(

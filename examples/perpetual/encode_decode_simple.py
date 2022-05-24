@@ -52,9 +52,6 @@ def main():
     # The generator must similarly be configured based on the encoder/decoder.
     offset_generator.configure(encoder.symbols)
 
-    # Allocate some storage for a symbol.
-    symbol = bytearray(encoder.symbol_bytes)
-
     # Allocate some data to encode. In this case we make a buffer
     # with the same size as the encoder's block size (the max.
     # amount a single encoder can encode)
@@ -79,7 +76,7 @@ def main():
         coefficients = generator.generate(seed)
 
         # Encode a symbol into the symbol buffer
-        encoder.encode_symbol(symbol, coefficients, offset)
+        symbol = encoder.encode_symbol(coefficients, offset)
 
         # Note; if this were two septate applications communicating over a
         # network the encoder and decoder would need to exchange some

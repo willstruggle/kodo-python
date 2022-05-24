@@ -51,12 +51,6 @@ def main():
     # The generator must similarly be configured based on the encoder/decoder.
     generator.configure(encoder.symbols)
 
-    # Allocate some storage for a symbol.
-    symbol = bytearray(encoder.symbol_bytes)
-
-    # Allocate some storage the coefficients.
-    coefficients = bytearray(generator.max_coefficients_bytes)
-
     # Allocate some data to encode. In this case we make a buffer
     # with the same size as the encoder's block size (the max.
     # amount a single encoder can encode)
@@ -83,7 +77,7 @@ def main():
 
             index = systematic_index
             systematic_index += 1
-            encoder.encode_systematic_symbol(symbol, index)
+            symbol = encoder.encode_systematic_symbol(index)
 
             # Drop packet based on loss probability
             if random.randint(0, 100) < loss_probability:
@@ -94,14 +88,14 @@ def main():
 
         elif generator.remaining_repair_symbols != 0:
 
-            index = generator.generate(coefficients)
-            encoder.encode_symbol(symbol, coefficients)
+            coefficients, index = generator.generate()
+            symbol = encoder.encode_symbol(coefficients)
 
             # Drop packet based on loss probability
             if random.randint(0, 100) < loss_probability:
                 print(" - lost")
             else:
-                generator.generate_specific(coefficients, index)
+                coefficients = generator.generate_specific(index)
                 decoder.decode_symbol(symbol, coefficients)
                 print(f" - decoded, rank now {decoder.rank}")
         else:

@@ -106,8 +106,6 @@ def main():
     generator = kodo.block.generator.RandomUniform(field)
     generator.configure(encoder.symbols)
 
-    symbol = bytearray(encoder.symbol_bytes)
-
     coefficients = bytearray(generator.max_coefficients_bytes)
 
     # Create a bytearray from the image to use in the encoding (only pick the
@@ -129,13 +127,13 @@ def main():
         if encoder.rank > systematic_index:
             index = systematic_index
             systematic_index += 1
-            encoder.encode_systematic_symbol(symbol, index)
+            symbol = encoder.encode_systematic_symbol(index)
 
             if random.randint(0, 100) >= loss_probability:
                 decoder.decode_systematic_symbol(symbol, index)
         else:
             generator.generate(coefficients)
-            encoder.encode_symbol(symbol, coefficients)
+            symbol = encoder.encode_symbol(coefficients)
 
             if random.randint(0, 100) >= loss_probability:
                 decoder.decode_symbol(symbol, coefficients)

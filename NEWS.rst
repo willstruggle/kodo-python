@@ -6,7 +6,8 @@ every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Major: Upgrade to kodo 13.
+* Major: Upgrade to pybind11 version 4.
 
 18.1.0
 ------

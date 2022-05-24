@@ -41,17 +41,15 @@ class TestBlockGenerators(unittest.TestCase):
         generator = kodo.block.generator.RandomUniform(field)
         generator.configure(symbols=symbols)
         self.assertEqual(symbols, generator.symbols)
-        coefficients = bytearray(generator.max_coefficients_bytes)
         generator.set_seed(0)
 
         for index in range(symbols):
 
-            generator.generate(coefficients)
+            coefficients = generator.generate()
 
         old_coefficients = coefficients
-        coefficients = bytearray(generator.max_coefficients_bytes)
         generator.set_seed(0)
-        generator.generate_partial(coefficients, generator.symbols)
+        coefficients = generator.generate_partial(generator.symbols)
 
     def test_block_rs_cauchy_simple(self):
         fields = [kodo.FiniteField.binary4, kodo.FiniteField.binary8]
@@ -63,8 +61,6 @@ class TestBlockGenerators(unittest.TestCase):
 
         symbols = 14
         index = 5
-        coefficients = bytearray()
-
         generator = kodo.block.generator.RSCauchy(field)
         generator.configure(symbols)
         self.assertEqual(symbols, generator.symbols)
@@ -85,7 +81,6 @@ class TestBlockGenerators(unittest.TestCase):
         self.assertEqual(generator_both.row_redundancy_enabled(), True)
         self.assertEqual(generator_both.column_redundancy_enabled(), True)
         self.assertEqual(symbols, rows * cols)
-        coefficients_both = bytearray(generator_both.max_coefficients_bytes)
 
         generator_row = kodo.block.generator.Parity2D()
         generator_row.configure(rows, cols)
@@ -93,7 +88,6 @@ class TestBlockGenerators(unittest.TestCase):
         self.assertEqual(generator_row.column_redundancy_enabled(), False)
         symbols = generator_row.symbols
         self.assertEqual(symbols, rows * cols)
-        coefficients_row = bytearray(generator_row.max_coefficients_bytes)
 
         generator_column = kodo.block.generator.Parity2D()
         generator_column.configure(rows, cols)
@@ -101,7 +95,6 @@ class TestBlockGenerators(unittest.TestCase):
         self.assertEqual(generator_column.row_redundancy_enabled(), False)
         symbols = generator_column.symbols
         self.assertEqual(symbols, rows * cols)
-        coefficients_column = bytearray(generator_column.max_coefficients_bytes)
 
         generator_none = kodo.block.generator.Parity2D()
         generator_none.configure(rows, cols)
@@ -112,17 +105,17 @@ class TestBlockGenerators(unittest.TestCase):
 
         while generator_both.can_advance():
             if generator_both.can_generate():
-                index = generator_both.generate(coefficients_both)
+                coefficients, index = generator_both.generate()
             generator_both.advance()
 
         while generator_row.can_advance():
             if generator_row.can_generate():
-                index = generator_row.generate(coefficients_row)
+                coefficients, index = generator_row.generate()
             generator_row.advance()
 
         while generator_column.can_advance():
             if generator_column.can_generate():
-                index = generator_column.generate(coefficients_column)
+                coefficients, index = generator_column.generate()
             generator_column.advance()
 
 

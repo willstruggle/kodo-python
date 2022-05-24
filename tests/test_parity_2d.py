@@ -32,7 +32,7 @@ class Encoder(object):
         self.symbol_bytes = 10
         self.encoder.configure(self.symbols, self.symbol_bytes)
         self.coded_symbol = bytearray(self.encoder.symbol_bytes)
-        self.coefficients = bytearray(self.generator.max_coefficients_bytes)
+        self.coefficients = None
         self.produce = None
         self.block_index = 0
 
@@ -43,9 +43,7 @@ class Encoder(object):
         index = self.encoder.rank
 
         self.encoder.set_symbol_storage(symbol_storage=symbol, index=index)
-        self.encoder.encode_systematic_symbol(
-            symbol_storage=self.coded_symbol, index=index
-        )
+        self.coded_symbol = self.encoder.encode_systematic_symbol(index=index)
 
         self.produce(
             is_systematic=True,
@@ -59,8 +57,8 @@ class Encoder(object):
             while self.generator.can_advance():
 
                 if self.generator.can_generate():
-                    repair_index = self.generator.generate(self.coefficients)
-                    self.encoder.encode_symbol(self.coded_symbol, self.coefficients)
+                    self.coefficients, repair_index = self.generator.generate()
+                    self.coded_symbol = self.encoder.encode_symbol(self.coefficients)
 
                     self.produce(
                         is_systematic=False,
@@ -87,7 +85,7 @@ class Decoder(object):
         self.decoder.configure(self.symbols, self.symbol_bytes)
         self.symbols_storage = bytearray(self.decoder.block_bytes)
         self.decoder.set_symbols_storage(self.symbols_storage)
-        self.coefficients = bytearray(self.generator.max_coefficients_bytes)
+        self.coefficients = None
         self.produce = None
         self.block_index = 0
         self.release_index = 0
@@ -105,7 +103,7 @@ class Decoder(object):
             self.decoder.decode_systematic_symbol(symbol=symbol, index=index)
 
         else:
-            self.generator.generate_specific(self.coefficients, index)
+            self.coefficients = self.generator.generate_specific(index)
             self.decoder.decode_symbol(symbol=symbol, coefficients=self.coefficients)
 
         while self.release_index < self.decoder.symbols:
@@ -113,7 +111,7 @@ class Decoder(object):
             if not self.decoder.is_symbol_decoded(self.release_index):
                 return
 
-            release = self.decoder.symbol_at(self.release_index)
+            release = self.decoder.symbol_data(self.release_index)
 
             self.produce(symbol=release)
 

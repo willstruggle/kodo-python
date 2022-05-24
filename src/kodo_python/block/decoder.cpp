@@ -54,42 +54,24 @@ void block_decoder_enable_log(
 }
 
 void block_decoder_decode_symbol(decoder_type& decoder,
-                                 pybind11::handle symbol_handle,
-                                 pybind11::handle coefficients_handle)
+                                 pybind11::bytearray symbol,
+                                 pybind11::bytearray coefficients)
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-    PyObject* coefficients_obj = coefficients_handle.ptr();
 
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) < decoder.symbol_bytes())
+    if (symbol.size() < decoder.symbol_bytes())
     {
         throw pybind11::value_error(
             "symbol: not large enough to contain symbol");
     }
 
-    decoder.decode_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
-                          (uint8_t*)PyByteArray_AsString(coefficients_obj));
+    decoder.decode_symbol((uint8_t*)PyByteArray_AsString(symbol.ptr()),
+                          (uint8_t*)PyByteArray_AsString(coefficients.ptr()));
 }
 
 void block_decoder_decode_systematic_symbol(decoder_type& decoder,
-                                            pybind11::handle symbol_handle,
+                                            pybind11::bytearray symbol,
                                             std::size_t index)
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
 
     if (index >= decoder.symbols())
     {
@@ -97,88 +79,55 @@ void block_decoder_decode_systematic_symbol(decoder_type& decoder,
     }
 
     decoder.decode_systematic_symbol(
-        (const uint8_t*)PyByteArray_AsString(symbol_obj), index);
+        (const uint8_t*)PyByteArray_AsString(symbol.ptr()), index);
 }
 
 void block_decoder_set_symbols_storage(decoder_type& decoder,
-                                       pybind11::handle symbols_storage_handle)
+                                       pybind11::bytearray symbols_storage)
 {
-    PyObject* symbols_storage_obj = symbols_storage_handle.ptr();
-    if (!PyByteArray_Check(symbols_storage_obj))
-    {
-        throw pybind11::type_error("symbols_storage: expected type bytearray");
-    }
-
     decoder.set_symbols_storage(
-        (uint8_t*)PyByteArray_AsString(symbols_storage_obj));
+        (uint8_t*)PyByteArray_AsString(symbols_storage.ptr()));
 }
 
 void block_decoder_set_symbol_storage(decoder_type& decoder,
-                                      pybind11::handle symbol_storage_handle,
+                                      pybind11::bytearray symbol_storage,
                                       std::size_t index)
 {
-    PyObject* symbol_storage_obj = symbol_storage_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_storage_obj))
-    {
-        throw pybind11::type_error("symbol_storage: expected type bytearray");
-    }
-
     if (index >= decoder.symbols())
     {
         throw pybind11::value_error("index: must be less than symbols");
     }
 
     decoder.set_symbol_storage(
-        (uint8_t*)PyByteArray_AsString(symbol_storage_obj), index);
+        (uint8_t*)PyByteArray_AsString(symbol_storage.ptr()), index);
 }
 
 void block_decoder_recode_symbol(decoder_type& decoder,
-                                 pybind11::handle symbol_handle,
-                                 pybind11::handle coefficients_handle,
-                                 pybind11::handle coefficients_in_handle)
+                                 pybind11::bytearray symbol,
+                                 pybind11::bytearray coefficients,
+                                 pybind11::bytearray coefficients_in)
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-    PyObject* coefficients_obj = coefficients_handle.ptr();
-    PyObject* coefficients_in_obj = coefficients_in_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
-
-    if (!PyByteArray_Check(coefficients_in_obj))
-    {
-        throw pybind11::type_error("coefficients_in: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) < decoder.symbol_bytes())
+    if (symbol.size() < decoder.symbol_bytes())
     {
         throw pybind11::value_error(
             "symbol: not large enough to contain symbol");
     }
 
     decoder.recode_symbol(
-        (uint8_t*)PyByteArray_AsString(symbol_obj),
-        (uint8_t*)PyByteArray_AsString(coefficients_obj),
-        (const uint8_t*)PyByteArray_AsString(coefficients_in_obj));
+        (uint8_t*)PyByteArray_AsString(symbol.ptr()),
+        (uint8_t*)PyByteArray_AsString(coefficients.ptr()),
+        (const uint8_t*)PyByteArray_AsString(coefficients_in.ptr()));
 }
 
-pybind11::handle block_decoder_symbol_at(decoder_type& decoder,
-                                         std::size_t index)
+auto block_decoder_symbol_data(decoder_type& decoder, std::size_t index)
+    -> pybind11::bytearray
 {
     if (index >= decoder.symbols())
     {
         throw pybind11::value_error("index: must be less than symbols");
     }
-    auto symbol = decoder.symbol_at(index);
-    return PyByteArray_FromStringAndSize((const char*)symbol,
-                                         decoder.symbol_bytes());
+    auto symbol = decoder.symbol_data(index);
+    return pybind11::bytearray{(char*)symbol, decoder.symbol_bytes()};
 }
 
 void decoder(pybind11::module& m)
@@ -217,7 +166,7 @@ void decoder(pybind11::module& m)
              "the block.\n"
              "\t:param index: The index of the symbol. Note the index must be "
              "equal to Decoder.rank() + 1.\n")
-        .def("symbol_at", &block_decoder_symbol_at, arg("index"),
+        .def("symbol_data", &block_decoder_symbol_data, arg("index"),
              "Get the memory for a symbol.\n\n"
              "\t:param index: The index of the symbol to get.\n")
         .def_property_readonly("block_bytes", &decoder_type::block_bytes,

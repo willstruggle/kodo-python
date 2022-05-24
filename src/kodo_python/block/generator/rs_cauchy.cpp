@@ -66,38 +66,36 @@ void generator_rs_cauchy_enable_log(
         },
         &generator);
 }
-auto block_generator_rs_cauchy_generate(rs_cauchy_type& generator,
-                                        pybind11::handle coefficients_handle)
+auto block_generator_rs_cauchy_generate(rs_cauchy_type& generator)
+    -> pybind11::tuple
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
+    auto index = generator.generate(coefficients.data());
 
-    return generator.generate((uint8_t*)PyByteArray_AsString(coefficients_obj));
+    pybind11::tuple returns = pybind11::make_tuple(
+        pybind11::bytearray{(char*)coefficients.data(), coefficients.size()},
+        index);
+
+    return returns;
 }
 
-void block_generator_rs_cauchy_generate_specific(
-    rs_cauchy_type& generator, pybind11::handle coefficients_handle,
-    std::size_t index)
+auto block_generator_rs_cauchy_generate_specific(rs_cauchy_type& generator,
+                                                 std::size_t index)
+    -> pybind11::bytearray
 
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
 
     if (index >= generator.repair_symbols())
     {
         throw pybind11::value_error("index: must be less than repair_symbols");
     }
 
-    generator.generate_specific(
-        (uint8_t*)PyByteArray_AsString(coefficients_obj), index);
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
+
+    generator.generate_specific(coefficients.data(), index);
+
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
 void rs_cauchy(pybind11::module& m)
@@ -133,23 +131,15 @@ void rs_cauchy(pybind11::module& m)
             "generator. This number decreases with each call to "
             "RSCauchy.generate().\n")
         .def("generate", &block_generator_rs_cauchy_generate,
-             arg("coefficients"),
              "Generates the coefficients.\n\n"
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be stored."
-             "\t:return: the index of the generated coefficients. This can be "
+             "\t:return: A tuple containing the coefficients and the index of "
+             "the generated coefficients. The index can be "
              "used with RSCauchy.generate_specific() to recreate the "
              "coefficients at a later time.")
         .def("generate_specific", &block_generator_rs_cauchy_generate_specific,
              "Generate a specific set of coefficients.\n\n"
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be stored.\n"
              "\t:param index: The index of the coefficients to generate. The "
              "index must be less than or equal to RSCauchy.repair_symbols().\n")
-        .def_property_readonly("max_coefficients_bytes",
-                               &rs_cauchy_type::max_coefficients_bytes,
-                               "Return the maximum number of bytes to be "
-                               "generated when calling generate.\n")
         .def(
             "enable_log", &generator_rs_cauchy_enable_log, arg("callback"),
             "Enable logging for this generator.\n\n"

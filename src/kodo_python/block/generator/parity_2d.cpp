@@ -63,32 +63,31 @@ void generator_parity_2d_enable_log(
         &generator);
 }
 
-auto block_generator_parity_2d_generate(parity_2d_type& generator,
-                                        pybind11::handle coefficients_handle)
+auto block_generator_parity_2d_generate(parity_2d_type& generator)
+    -> pybind11::tuple
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
 
-    return generator.generate((uint8_t*)PyByteArray_AsString(coefficients_obj));
+    auto position = generator.generate(coefficients.data());
+
+    pybind11::tuple returns = pybind11::make_tuple(
+        pybind11::bytearray{(char*)coefficients.data(), coefficients.size()},
+        position);
+
+    return returns;
 }
 
-void block_generator_parity_2d_generate_specific(
-    parity_2d_type& generator, pybind11::handle coefficients_handle,
-    std::size_t position)
+auto block_generator_parity_2d_generate_specific(parity_2d_type& generator,
+                                                 std::size_t position)
+    -> pybind11::bytearray
 {
-    PyObject* coefficients_obj = coefficients_handle.ptr();
 
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
+    std::vector<uint8_t> coefficients(generator.max_coefficients_bytes());
 
-    generator.generate_specific(
-        (uint8_t*)PyByteArray_AsString(coefficients_obj), position);
+    generator.generate_specific(coefficients.data(), position);
+
+    return pybind11::bytearray{(char*)coefficients.data(), coefficients.size()};
 }
 
 void parity_2d(pybind11::module& m)
@@ -122,24 +121,16 @@ void parity_2d(pybind11::module& m)
              "Returns True if the generator can generate the coefficients at "
              "this point.\n\n")
         .def("generate", &block_generator_parity_2d_generate,
-             arg("coefficients"),
              "Generate the coefficients for the current position. Use "
              "SMPTE2022.can_generate() to check if calling this function is "
              "allowed.\n\n"
-             "Returns the current position of the generator."
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be written.\n")
+             "Returns the coefficients and the current position of the "
+             "generator as a tuple. \n")
         .def("generate_specific", &block_generator_parity_2d_generate_specific,
-             arg("coefficients"), arg("position"),
+             arg("position"),
              "Generate the coefficients for a specified position.\n\n"
-             "\t:param coefficients: The data buffer where the coefficients "
-             "will be written.\n"
              "\t:param position: The specific position to generate "
              "coefficients for.\n")
-        .def_property_readonly("max_coefficients_bytes",
-                               &parity_2d_type::max_coefficients_bytes,
-                               "Return the maximum number of bytes to be "
-                               "generated when calling generate.\n")
         .def("set_column_redundancy_enabled",
              &parity_2d_type::set_column_redundancy_enabled,
              "Specifies if the generator should generate column redundancy or "

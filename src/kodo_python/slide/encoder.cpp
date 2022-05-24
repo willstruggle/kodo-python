@@ -19,6 +19,7 @@
 // See accompanying file LICENSE.rst or https://www.steinwurf.com/license
 
 #include "encoder.hpp"
+#include "tuple_to_range.hpp"
 
 #include "../version.hpp"
 
@@ -46,7 +47,22 @@ struct encoder_wrapper : kodo::slide::encoder
     {
     }
     std::function<void(const std::string&, const std::string&)> m_log_callback;
-    kodo::slide::stream<pybind11::object> m_stream;
+    bool configured = false;
+
+    ~encoder_wrapper()
+    {
+        if (configured)
+        {
+            reset(
+                [](uint64_t index, const uint8_t* symbol, void* user_data)
+                {
+                    (void)user_data;
+                    (void)index;
+                    delete[] symbol;
+                },
+                nullptr);
+        }
+    }
 };
 using encoder_type = encoder_wrapper;
 
@@ -65,121 +81,114 @@ void slide_encoder_enable_log(
         &encoder);
 }
 
-void slide_encoder_configure(encoder_type& encoder, std::size_t symbol_bytes)
-{
-    encoder.m_stream.reset();
-    encoder.configure(symbol_bytes);
-}
-
 void slide_encoder_reset(encoder_type& encoder)
 {
-    encoder.m_stream.reset();
-    encoder.reset();
+    encoder.reset(
+        [](uint64_t index, const uint8_t* symbol, void* user_data)
+        {
+            (void)user_data;
+            (void)index;
+            delete[] symbol;
+        },
+        nullptr);
 }
 
-auto slide_encoder_push_front_symbol(encoder_type& encoder,
-                                     pybind11::object symbol_handle)
-    -> std::size_t
+void slide_encoder_configure(encoder_type& encoder,
+                             std::size_t max_symbol_bytes)
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
+    if (encoder.configured)
     {
-        throw pybind11::type_error("symbol: expected type bytearray");
+        slide_encoder_reset(encoder);
     }
+    encoder.configure(max_symbol_bytes);
+    encoder.configured = true;
+}
 
-    if ((std::size_t)PyByteArray_Size(symbol_obj) > encoder.symbol_bytes())
+auto slide_encoder_stream_range(encoder_type& encoder) -> pybind11::tuple
+{
+    kodo::slide::range range = encoder.stream_range();
+    pybind11::tuple stream_tuple =
+        pybind11::make_tuple(range.lower_bound(), range.upper_bound());
+    return stream_tuple;
+}
+
+void slide_encoder_push_symbol(encoder_type& encoder,
+                               pybind11::bytearray symbol_bytearray)
+{
+    auto size = symbol_bytearray.size();
+    if (size > encoder.max_symbol_bytes())
     {
         throw pybind11::value_error(
-            "symbol: greater than encoder.symbol_bytes(). Must be less than or "
-            "equal");
+            "symbol: greater than encoder.max_symbol_bytes(). Must be less "
+            "than or equal");
     }
-    auto index = encoder.m_stream.push_front(symbol_handle);
-    assert(encoder.m_stream.in_stream(index));
-    (void)index;
-    return encoder.push_front_symbol((uint8_t*)PyByteArray_AsString(symbol_obj),
-                                     PyByteArray_Size(symbol_obj));
+
+    uint8_t* symbol = new uint8_t[size];
+    std::memcpy((uint8_t*)PyByteArray_AsString(symbol_bytearray.ptr()), symbol,
+                size);
+    encoder.push_symbol(symbol, size);
 }
 
-auto slide_encoder_symbol_at(encoder_type& encoder, std::size_t index)
+auto slide_encoder_symbol_data(encoder_type& encoder, std::size_t index)
+    -> pybind11::bytearray
 {
-    if (!encoder.m_stream.in_stream(index))
+    if (!encoder.in_stream(index))
         throw pybind11::value_error("index not in stream");
 
-    return encoder.m_stream.at(index);
+    auto symbol = encoder.symbol_data(index);
+    auto size = encoder.symbol_bytes(index);
+
+    return pybind11::bytearray{(char*)symbol, size};
 }
 
-auto slide_encoder_in_stream(encoder_type& encoder, std::size_t index)
+auto slide_encoder_in_stream(encoder_type& encoder, std::size_t index) -> bool
 {
-    return encoder.m_stream.in_stream(index);
+    return encoder.in_stream(index);
 }
 
-auto slide_encoder_pop_back_symbol(encoder_type& encoder)
+void slide_encoder_pop_symbol(encoder_type& encoder)
 {
-    if (encoder.m_stream.is_empty())
+    if (encoder.is_stream_empty())
         throw pybind11::value_error("Stream was empty");
-    encoder.m_stream.pop_back();
-    return encoder.pop_back_symbol();
+
+    auto symbol = encoder.pop_symbol();
+    delete[] symbol;
 }
 
 auto slide_encoder_encode_symbol(encoder_type& encoder,
-                                 pybind11::handle symbol_handle,
-                                 pybind11::handle coefficients_handle)
-    -> std::size_t
+                                 pybind11::tuple window_handle,
+                                 pybind11::bytearray coefficients)
+    -> pybind11::bytearray
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-    PyObject* coefficients_obj = coefficients_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if (!PyByteArray_Check(coefficients_obj))
-    {
-        throw pybind11::type_error("coefficients: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) > encoder.symbol_bytes())
-    {
-        throw pybind11::value_error("symbol: bytearray too large. Must be less "
-                                    "than or equal to Encoder.symbol_bytes");
-    }
-
-    if ((std::size_t)PyByteArray_Size(coefficients_obj) == 0)
+    if (coefficients.size() == 0)
     {
         throw pybind11::value_error("coefficients: length is 0.");
     }
 
-    return encoder.encode_symbol(
-        (uint8_t*)PyByteArray_AsString(symbol_obj),
-        (uint8_t*)PyByteArray_AsString(coefficients_obj));
+    kodo::slide::range range = py_tuple_to_range(window_handle);
+
+    std::vector<uint8_t> symbol(encoder.max_symbol_bytes());
+
+    auto size = encoder.encode_symbol(
+        symbol.data(), range,
+        (uint8_t*)PyByteArray_AsString(coefficients.ptr()));
+
+    return pybind11::bytearray{(char*)symbol.data(), size};
 }
 
 auto slide_encoder_encode_systematic_symbol(encoder_type& encoder,
-                                            pybind11::handle symbol_handle,
-                                            std::size_t index) -> std::size_t
+                                            std::size_t index)
+    -> pybind11::bytearray
 {
-    PyObject* symbol_obj = symbol_handle.ptr();
-
-    if (!PyByteArray_Check(symbol_obj))
-    {
-        throw pybind11::type_error("symbol: expected type bytearray");
-    }
-
-    if ((std::size_t)PyByteArray_Size(symbol_obj) > encoder.symbol_bytes())
-    {
-        throw pybind11::value_error("symbol: bytearray too large. Must be less "
-                                    "than or equal to Encoder.symbol_bytes");
-    }
-
-    if (!encoder.m_stream.in_stream(index))
+    if (!encoder.in_stream(index))
     {
         throw pybind11::value_error("index: out of range, must be in stream.");
     }
 
-    return encoder.encode_systematic_symbol(
-        (uint8_t*)PyByteArray_AsString(symbol_obj), index);
+    std::vector<uint8_t> symbol(encoder.symbol_bytes(index));
+    auto size = encoder.encode_systematic_symbol(symbol.data(), index);
+
+    return pybind11::bytearray{(char*)symbol.data(), size};
 }
 }
 
@@ -190,23 +199,19 @@ void encoder(pybind11::module& m)
         .def(init<kodo::finite_field>(), arg("field"),
              "The sliding window encoder constructor\n\n"
              "\t:param field: the chosen finite field.\n")
-        .def("configure", &slide_encoder_configure, arg("symbol_bytes"),
+        .def("configure", &slide_encoder_configure, arg("max_symbol_bytes"),
              "Configures the encoder with the given parameters. This must"
              "be called before anything else. If needed configure can be"
              "called again. This is useful for reusing an existing coder."
              "Note that the a reconfiguration always implies a reset,"
              "so the coder will be in a clean state after the operation\n\n"
-             "\t:param symbol_bytes: The size of a symbol in bytes.\n")
+             "\t:param max_symbol_bytes: The size of a symbol in bytes.\n")
         .def("reset", &slide_encoder_reset, "Reset the state of the encoder.\n")
         .def_property_readonly("field", &encoder_type::field,
                                "Return the finite field used.\n")
         .def_property_readonly(
-            "symbol_bytes", &encoder_type::symbol_bytes,
+            "max_symbol_bytes", &encoder_type::max_symbol_bytes,
             "Return the maximum size of a symbol in the stream in bytes.\n")
-        .def_property_readonly(
-            "stream_symbol_bytes", &encoder_type::stream_symbol_bytes,
-            "Return the current maximum number of bytes needed"
-            "for an encoded symbol.\n")
         .def_property_readonly(
             "stream_symbols", &encoder_type::stream_symbols,
             "Return the total number of symbols available in memory at the "
@@ -218,71 +223,52 @@ void encoder(pybind11::module& m)
             "Return True if Encoder.stream_symbols == 0. Else False.\n")
         .def_property_readonly(
             "stream_lower_bound", &encoder_type::stream_lower_bound,
-            "Return the index of the oldest symbol known by the encoder. This "
+            "Return the index of the oldest symbol known by the encoder. "
+            "This "
             "symbol"
             "may not be inside the window but can be included in the window"
             "if needed.\n")
         .def_property_readonly("stream_upper_bound",
                                &encoder_type::stream_upper_bound,
                                "Return the upper bound of the stream.\n")
-        .def("push_front_symbol", &slide_encoder_push_front_symbol,
-             arg("symbol"),
+        .def_property_readonly("stream_range", &slide_encoder_stream_range,
+                               "Return a tuple containing the lower- and upper "
+                               "bound of the stream.\n")
+        .def("in_stream", &encoder_type::in_stream, arg("index"),
+             "Return True if the stream contains a symbol with the given "
+             "index, otherwise False.\n\n"
+             ":param index: The index to look for in the stream.\n")
+        .def_property_readonly("stream_upper_bound",
+                               &encoder_type::stream_upper_bound,
+                               "Return the upper bound of the stream.\n")
+        .def("push_symbol", &slide_encoder_push_symbol, arg("symbol"),
              "Adds a new symbol to the front of the encoder. Increments the "
              "number"
              "of symbols in the stream and increases the"
              "Encoder.stream_upper_bound\n\n"
              ":param symbol: The buffer containing all the data for the symbol"
              "Return the stream index of the symbol being added.\n")
-        .def("pop_back_symbol", &slide_encoder_pop_back_symbol,
+        .def("pop_symbol", &slide_encoder_pop_symbol,
              "Remove the \"oldest\" symbol from the stream. Increments the"
              "Encoder.stream_lower_bound\n\n"
              "Return the index of the symbol being removed.\n")
-        .def_property_readonly(
-            "window_symbols", &encoder_type::window_symbols,
-            "Return the number of symbols currently in the coding window. The"
-            "window must be within the bounds of the stream.\n")
-        .def_property_readonly(
-            "window_lower_bound", &encoder_type::window_lower_bound,
-            "Return the index of the \"oldest\" symbol in the coding window.\n")
-        .def_property_readonly("window_upper_bound",
-                               &encoder_type::window_upper_bound,
-                               "Return the upper bound of the window. The "
-                               "range of valid symbol indices"
-                               "is range(Encoder.window_lower_bound, "
-                               "Encoder.window_upper_bound).\n\n"
-                               "Note that Encoder.window_upper_bound - 1 is "
-                               "the largest number in this range.\n")
-        .def("set_window", &encoder_type::set_window, arg("lower_bound"),
-             arg("symbols"),
-             "The window represents the symbols which will be included in the "
-             "next"
-             "encoding. The window cannot exceed the bound of the stream.\n\n"
-             ":param lower_bound: Sets the index of the oldest symbol in the "
-             "window\n"
-             ":param symbols: Sets the number of symbols within the window.")
         .def(
-            "encode_symbol", &slide_encoder_encode_symbol, arg("symbol"),
+            "encode_symbol", &slide_encoder_encode_symbol, arg("window"),
             arg("coefficients"),
-            "Write an encoded symbol according to the coding coefficients.\n\n"
-            ":param symbol: The buffer where the encoded symbol will be "
-            "stored. The"
-            "\tsymbol must be Encoder.symbol_bytes large."
+            "Return an encoded symbol according to the coding coefficients and "
+            "window.\n\n"
             ":param coefficients: The coding coefficients. These must have the"
             "\tmemory layout required (see README.rst). A compatible format can"
             "\tbe created using Encoder.generate()."
             "Return The size of the output symbol in bytes i.e the number of"
             "\tbytes used from the symbol buffer.\n")
         .def("encode_systematic_symbol",
-             &slide_encoder_encode_systematic_symbol, arg("symbol"),
-             arg("index"),
-             "Write a source symbol to the symbol buffer.\n\n"
-             ":param symbol: The buffer where the source symbol will be "
-             "stored. The"
-             "\tsymbol buffer must be Encoder.symbol_bytes large"
+             &slide_encoder_encode_systematic_symbol, arg("index"),
+             "Return a source symbol bytearray.\n\n"
              ":param index: The symbol index which should be written."
              "Return The size of the output symbol in bytes i.e the number of"
              "\tbytes used from the symbol buffer.")
-        .def("symbol_at", &slide_encoder_symbol_at, arg("index"),
+        .def("symbol_data", &slide_encoder_symbol_data, arg("index"),
              "Get a symbol from the stream.\n\n"
              ":param index: The index of the symbol to get.")
         .def("in_stream", &slide_encoder_in_stream, arg("index"),
